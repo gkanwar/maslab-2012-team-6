@@ -88,7 +88,6 @@ class Arduino(threading.Thread):
                 output += chr(i+1)
             output += "S" + chr(len(self.servoAngles) + 1)
             for i in self.servoAngles:
-                i = i/360 * 256
                 output += chr(i+1)
             output += ";"
             self.port.write(output)
@@ -183,7 +182,7 @@ class Arduino(threading.Thread):
         return len(self.digitalPorts) - 1
     def addAnalogPort(self, port):
         self.analogPorts.append(port)
-        self.analogPorts.append(None)
+        self.analogSensors.append(None)
         return len(self.analogPorts) - 1
     def addMC(self, txPin, rxPin):
         self.motorControllerPorts.append((rxPin, txPin))
@@ -221,7 +220,6 @@ class Motor:
     def setVal(self, val):
         # Modify the -126 to 127 range to be 0 to 255 for the Arduino
         val = val % 255
-        print "Setting motor val", val
         self.arduino.setMotorSpeed(self.index, val)
 
 # Class to interact with a digital sensor
@@ -256,22 +254,36 @@ class MotorController:
         self.numMotors += 1
         return self.index * 2 + self.numMotors - 1
 
-## Example code - sets up an arduino with 2 motors and a digital sensor.
-## Sets the two motors to 50 speed each and then constantly outputs the
-## digital sensor reading
+## Example code - sets up an arduino with 2 motors, a digital sensor,
+## and a servo. Sets the two motors to 50 speed each and then loops and does
+## various things with the servo and sensors.
 
 #a = Arduino()
 #mc = MotorController(a, 18, 19)
 #m0 = Motor(a, mc)
 #m1 = Motor(a, mc)
 #d = DigitalSensor(a, 2)
+#s = Servo(a, 1)
+#analog = AnalogSensor(a, 2)
 #a.run()
 #
 #m0.setVal(-50)
 #m1.setVal(-50)
 #
 #while True:
+#    time.sleep(0.1)
+#    print analog.getValue()
+##########################
+#    for i in range(100):
+#        s.setAngle(i)
+#        time.sleep(0.01)
+#        print i
+#    for i in range(100, 0, -1):
+#        s.setAngle(i)
+#        time.sleep(0.01)
+#        print i
 #    val = d.getValue()
+##########################
 #    while val == None:
 #        val = d.getValue()
 #    print val
