@@ -26,10 +26,10 @@ int* digitalPorts;
 int* analogPorts;
 
 // Keeps track of how many of each thing we have
-int numMCs;
-int numServos;
-int numDigital;
-int numAnalog;
+int numMCs = 0;
+int numServos = 0;
+int numDigital = 0;
+int numAnalog = 0;
 
 // The dynamically sized return string
 char* retVal;
@@ -76,12 +76,24 @@ void motorInit()
   int rxPin, txPin;
   NewSoftSerial* tempSerial;
   CompactQik2s9v1* tempMC;
-
-  numMCs = (int) serialRead() - 1;
+  
+  // Free up any allocated memory from before
+  // Note: there's a memory leak here - the NewSoftSerial objects
+  // never get free'd. I'm too lazy to fix it :P
+  for (int i = 0; i < numMCs; i++)
+  {
+    free(mc[i]);
+  }
   free(mc);
+
+  // Read in the new numMCs
+  numMCs = (int) serialRead() - 1;
+  // Reallocate the array
   mc = (CompactQik2s9v1**) malloc(sizeof(CompactQik2s9v1*) * numMCs);
   for (int i = 0; i < numMCs; i++)
   {
+    // Create the NewSoftSerial and CompactQik objects and store
+    // them in the array
     rxPin = (int) serialRead();
     txPin = (int) serialRead();
     tempSerial = new NewSoftSerial(rxPin, txPin);
@@ -98,11 +110,21 @@ void motorInit()
 void servoInit()
 {
   Servo* tempServo;
-  numServos = (int) serialRead() - 1;
+  
+  // Free up the previously allocated memory
+  for (int i = 0; i < numServos; i++)
+  {
+    free(servo[i]);
+  }
   free(servo);
+  
+  // Read in the new numServos
+  numServos = (int) serialRead() - 1;
+  // Reallocate the servo array
   servo = (Servo**) malloc(sizeof(Servo*) * numServos);
   for (int i = 0; i < numServos; i++)
   {
+    // Create the Servo object and store it in the array
     tempServo = new Servo();
     tempServo->attach((int) serialRead());
     servo[i] = tempServo;
@@ -157,7 +179,11 @@ void initAll()
   }
 
   // Initialize retVal and retIndex
-  retVal = (char*) malloc(((2+numDigital) + (2+numAnalog) + 2) * sizeof(char));
+  // 2 bytes for 'Dn', numDigital bytes for the following arguments,
+  // then 2 bytes for 'Am', 2*numAnalog bytes because each analog
+  // input is 2 bytes long. Finally, 2 bytes for the ';' and the
+  // null character at the end.
+  retVal = (char*) malloc(((2+numDigital) + (2+2*numAnalog) + 2) * sizeof(char));
   retIndex = 0;
 }
 
@@ -249,9 +275,25 @@ void loop()
     // Add all the sensor data
     for (int i = 0; i < numAnalog; i++)
     {
-      // Analog read the ith sensor and add it's value to retVal
-      // Add 1 because 0 terminates the string
-      writeToRetVal((char) analogRead(analogPorts[i])+1);
+      // Analog read the ith sensor and decompose into two bytes
+      int analogVal = analogRead(analogPorts[i]);
+      char byte0 = analogVal % 256;
+      char byte1 = analogVal / 256;
+      // Do a little tweaking to make sure we don't send a null byte
+      // by accident. We possibly lose a little bit of accuracy
+      // here.
+      if (byte0 != 255)
+      {
+        byte0++;
+      }
+      if (byte1 != 255)
+      {
+        byte1++;
+      }
+
+      // Write the two bytes to the retVal, byte0 first
+      writeToRetVal(byte0);
+      writeToRetVal(byte1);
     }
 
     // Add a ';' and null terminate the retVal string
