@@ -1,0 +1,6 @@
+Dependencies:
+
+Name		How to get
+=================================================================
+PyUSB		Under lib, no need to install
+PyGame		sudo apt-get install python-pygame
