@@ -118,7 +118,9 @@ class Arduino(threading.Thread):
                     length = ord(serialRead(self.port))-1
                     # Fill the analogSensors array with incoming data
                     for i in range(length):
-                        self.analogSensors[i] = ord(serialRead(self.port))-1
+                        byte0 = ord(serialRead(self.port))-1
+                        byte1 = ord(serialRead(self.port))-1
+                        self.analogSensors[i] = byte1 * 256 + byte0
                 # End of packet
                 elif (type == ';'):
                     done = True
