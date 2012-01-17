@@ -1,6 +1,8 @@
 from blargh import Blargh
 import time
 
+# Takes in the state of the world and puts out some behavior based on
+# previous state (BehaviorBlargh is also a state machine :P)
 class BehaviorBlargh(Blargh):
     # States
     DODGE_WALL = 0
@@ -13,16 +15,18 @@ class BehaviorBlargh(Blargh):
     TURN_TIME = 2
 
     def __init__(self, arduinoInterfaceOutputWrapper):
+        # Set the initial state and other variables
         self.curState = self.GO_STRAIGHT
         self.stateTimer = 0
         self.lastTime = 0
+        # We use the arduinoInterfaceOutputWrapper to interact with the
+        # arduino interface process
         self.aiow = arduinoInterfaceOutputWrapper
 
+    # This is where all the magic happens!
     def step(self, bumpSensorHit):
-        print "BehaviorBlargh stepped"
         # Change states if the bump sensor is hit
         if (bumpSensorHit):
-            print ("BUMP SENSORUUUUUUUUUU")
             self.stateTimer = 0
             if (self.curState == self.GO_STRAIGHT):
                 self.curState = self.DODGE_WALL

@@ -2,6 +2,9 @@ from exceptions import ValueError
 from multiprocessing import Process, Pipe
 import time
 
+# Function that wraps a Blargh and is run in it's own process. It keeps track
+# of the input pipes and output pipes to interface with other blargh processes.
+
 def blarghProcess(blargh, masterConn, inPipes, outPipes, async):
 
     # Handle a tuple input from the master process
@@ -81,12 +84,15 @@ class BlarghProcessStarter():
         self.inPipes = []
         self.outPipes = []
 
+    # Use these functions to set up all the inPipes and outPipes before
+    # starting the blarghProcess
     def addInPipe(self, inPipe):
         self.inPipes.append(inPipe)
-
     def addOutPipe(self, outPipe):
         self.outPipes.append(outPipe)
 
+    # Create the process and return a BlarghMaster wrapper object that
+    # contains the process and pipe to it
     def start(self):
         parentMasterConn, childMasterConn = Pipe()
         proc = Process(target = blarghProcess, args = (self.blargh, childMasterConn, self.inPipes, self.outPipes, self.async))

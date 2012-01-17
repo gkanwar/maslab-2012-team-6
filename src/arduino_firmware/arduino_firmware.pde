@@ -277,8 +277,8 @@ void loop()
     {
       // Analog read the ith sensor and decompose into two bytes
       int analogVal = analogRead(analogPorts[i]);
-      char byte0 = analogVal % 256;
-      char byte1 = analogVal / 256;
+      unsigned char byte0 = analogVal % 256;
+      unsigned char byte1 = analogVal / 256;
       // Do a little tweaking to make sure we don't send a null byte
       // by accident. We possibly lose a little bit of accuracy
       // here.
