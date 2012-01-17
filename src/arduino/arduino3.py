@@ -199,9 +199,8 @@ class Arduino(threading.Thread):
 # Read from the serial port ignoring junk (use this instead of just port.read())
 def serialRead(port):
     inp = port.read()
-    # Sometimes just "\r\n" comes back (this problem may be gone now actually)
-    # we should throw this out
-    while inp in " \n\r": 
+    # Throw out no input (when python overtakes arduino)
+    while inp == "": 
         inp = port.read()
     return inp
 
@@ -256,36 +255,44 @@ class MotorController:
         self.numMotors += 1
         return self.index * 2 + self.numMotors - 1
 
-## Example code - sets up an arduino with 2 motors, a digital sensor,
-## and a servo. Sets the two motors to 50 speed each and then loops and does
-## various things with the servo and sensors.
+## Example setup for various sensors and actuators
 
+## Set up the arduino itself (do this every time)
 #a = Arduino()
+## Setting up a motor controller (txPin = 18, rxPin = 19) and two motors
+## on that motor controller
 #mc = MotorController(a, 18, 19)
 #m0 = Motor(a, mc)
 #m1 = Motor(a, mc)
+## Setting up a digital sensor on digital port 2
 #d = DigitalSensor(a, 2)
+## Setting up a servo on digital port 1
 #s = Servo(a, 1)
 #analog = AnalogSensor(a, 2)
 #a.run()
-#
+
+## Example code snippets for things to do with the various sensors and
+## actuators
+
+## Set motor speeds
 #m0.setVal(-50)
 #m1.setVal(-50)
-#
+
+## Read analog values
 #while True:
 #    time.sleep(0.1)
 #    print analog.getValue()
-##########################
+
+## Set servo angles
+#while True:
 #    for i in range(100):
 #        s.setAngle(i)
 #        time.sleep(0.01)
-#        print i
 #    for i in range(100, 0, -1):
 #        s.setAngle(i)
 #        time.sleep(0.01)
-#        print i
-#    val = d.getValue()
-##########################
+
+## Get digital sensor input
 #    while val == None:
 #        val = d.getValue()
 #    print val
