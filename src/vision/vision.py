@@ -3,10 +3,10 @@ lib = cdll.LoadLibrary('./libvision.so')
 
 class Vision(object):
     def __init__(self):
-        self.obj = lib.ImageProcessing_new()
+        self.obj = lib.createObj()
 
     def processBalls(self):
-        lib.ImageProcessing_processBalls(self.obj)
+        lib.processBalls(self.obj)
     #def getNumBalls(self):
     #    return lib.ImageProcessing_getNumBalls(self.obj)
     #def getR(self, index):
