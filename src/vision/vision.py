@@ -1,23 +1,19 @@
 from ctypes import cdll
-lib = cdll.LoadLibrary('vision/libfoo.so')
+lib = cdll.LoadLibrary('./libvision.so')
 
 class Vision(object):
     def __init__(self):
-        self.obj = lib.Foo_new()
+        self.obj = lib.ImageProcessing_new()
 
-    def bar(self):
-        lib.Foo_bar(self.obj)
-    def getNumBalls(self):
-        return lib.Foo_getNumBalls(self.obj)
-    def getR( self, index):
-        return lib.Foo_getR(self.obj, index);
-    def getTheta( self, index):
-        return lib.Foo_getTheta(self.obj, index);
+    def processBalls(self):
+        lib.ImageProcessing_processBalls(self.obj)
+    #def getNumBalls(self):
+    #    return lib.ImageProcessing_getNumBalls(self.obj)
+    #def getR(self, index):
+    #    return lib.ImageProcessing_getR(self.obj, index);
+    #def getTheta(self, index):
+    #    return lib.ImageProcessing_getTheta(self.obj, index);
 
-
-
-#f = Foo()
-#f.bar()
-#print f.getNumBalls()
-#print f.getR(0);
-#print f.getTheta(0);
+v = Vision()
+while True:
+    v.processBalls()

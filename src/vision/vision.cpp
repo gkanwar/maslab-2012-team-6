@@ -15,13 +15,40 @@ using namespace std;
 #define viewPort 50
 vector<float> returnValues;
 
-class Foo{
-public:
-        void bar(){
-	  bool first = 1;
-          IplImage* img = 0;
-	  IplImage* past[smoothFrames];
-	  for ( int i = 0; i < smoothFrames; i++){
+class ImageProcessing
+{
+    public:
+        void processBalls()
+        {
+            // Capture an image from camera
+            CvCapture* capture = cvCaptureFromCAM(0);
+
+            // Load an image from file
+            //IplImage* img = cvLoadImage("");
+
+            // Create some named windows for displaying images (for debugging)
+            cvNamedWindow("Original", CV_WINDOW_AUTOSIZE);
+            //cvNamedWindow("Output1", CV_WINDOW_AUTOSIZE);
+
+            //cvShowImage("Original", capture);
+
+            // Convert the image into HSV
+            //cvCvtColor(img, img, CV_BGR2HSV);
+
+            // Normalize luminosity
+            //for (int i = 0; i < img->height; i++)
+            //{
+            //    for (int j = 0; j < img->width; j++)
+            //    {
+            //        Nothing yet!
+            //    }
+            //}
+        }
+          /*
+	    bool first = 1;
+            IplImage* img = 0;
+	    IplImage* past[smoothFrames];
+	    for ( int i = 0; i < smoothFrames; i++){
 	    past[i]  = cvCreateImage(cvSize(640,480), IPL_DEPTH_8U, 3);
  	  }
 	  CvCapture* capture = cvCaptureFromCAM( 0);
@@ -139,7 +166,7 @@ public:
 	      
 	    if ( //cc->rect.height - 5 < cc->rect.width
 		 //&& cc->rect.height + 5 > cc->rect.width 
-		/*&&*/ cc->rect.height < 250){
+		&& cc->rect.height < 250){
 	      returnValues.push_back( (float)(startX + cc->rect.width)/(float)imageWidth * viewPort);
 	      returnValues.push_back( cc->rect.width );
 	      returnValues[0]++;
@@ -173,13 +200,15 @@ public:
   int getTheta(int index){
     return returnValues[index*2 + 1 + 1];
   }
+
+  */
 };
 
 extern "C" {
-  Foo* Foo_new(){ return new Foo(); }
-  void Foo_bar(Foo* foo){ foo->bar(); }
-  int Foo_getR(Foo* foo,int index){ foo->getR(index); }
-  int Foo_getTheta(Foo * foo,int index){ foo->getTheta(index); }
-  int Foo_getNumBalls( Foo* foo){foo->getNumBalls();}
+  ImageProcessing* ImageProcessing_new(){ return new ImageProcessing(); }
+  void ImageProcessing_processBalls(ImageProcessing* ip){ ip->processBalls(); }
+  //int ImageProcessing_getR(ImageProcessing* ip,int index){ ip->getR(index); }
+  //int ImageProcessing_getTheta(ImageProcessing * ip,int index){ ip->getTheta(index); }
+  //int ImageProcessing_getNumBalls( ImageProcessing* ip){ip->getNumBalls();}
 }
 
