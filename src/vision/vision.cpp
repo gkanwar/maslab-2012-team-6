@@ -8,8 +8,8 @@
 using namespace std;
 
 #define NUM_FRAMES_TO_AVERAGE 2
-#define RED_DISPARITY 60
-#define RED_THRESHOLD 50
+#define RED_DISPARITY 40
+#define RED_THRESHOLD 100
 
 class ImageProcessing
 {
@@ -31,6 +31,7 @@ class ImageProcessing
             cvNamedWindow("Original", CV_WINDOW_AUTOSIZE);
             cvNamedWindow("Output", CV_WINDOW_AUTOSIZE);
             cvNamedWindow("Intermediate", CV_WINDOW_AUTOSIZE);
+            cvNamedWindow("Int2", CV_WINDOW_AUTOSIZE);
         }
 
         void processBalls()
@@ -97,7 +98,6 @@ class ImageProcessing
             */
 
             // Normalize luminosity somewhat - REDACTED!
-            /*
             IplImage* hsvImage = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
             cvCvtColor(frame, hsvImage, CV_BGR2HSV);
 
@@ -106,24 +106,23 @@ class ImageProcessing
                 for (int j = 0; j < hsvImage->width; j++)
                 {
                     int index = i * hsvImage->widthStep + j * hsvImage->nChannels;
-                    hsvImage->imageData[index+2] = 50;
+                    hsvImage->imageData[index+2] = 200;
                 }
             }
 
             IplImage* normalized = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
             cvCvtColor(hsvImage, normalized, CV_HSV2BGR);
 
-            cvShowImage("Output", normalized);
-            */
+            cvShowImage("Int2", normalized);
 
             // Filter the image for red balls
-            IplImage* ballImage = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 1);
-            for (int i = 0; i < frame->height; i++)
+            IplImage* ballImage = cvCreateImage(cvGetSize(normalized), IPL_DEPTH_8U, 1);
+            for (int i = 0; i < normalized->height; i++)
             {
-                for (int j = 0; j < frame->width; j++)
+                for (int j = 0; j < normalized->width; j++)
                 {
                     int ballImageIndex = i * ballImage->widthStep + j * ballImage->nChannels;
-                    int frameIndex = i * frame->widthStep + j * frame->nChannels;
+                    int frameIndex = i * normalized->widthStep + j * normalized->nChannels;
                     uchar* imageData = (uchar*) frame->imageData;
                     if(imageData[frameIndex+2] >= imageData[frameIndex] + RED_DISPARITY
                           && imageData[frameIndex+2] >= imageData[frameIndex+1] + RED_DISPARITY
@@ -144,12 +143,21 @@ class ImageProcessing
             CvMemStorage* storage = cvCreateMemStorage(0);
             CvSeq* contours = NULL;
             cvFindContours(ballImage, storage, &contours);
+            // Show it!
             IplImage* contourImage = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
             cvDrawContours(contourImage, contours, cvScalarAll(255), cvScalarAll(100), 1);
-            // Show it!
             IplImage* contourImage3C = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 100);
-            //cvCvtColor(contourImage, contourImage3C, CV_GRAY2BGR);
             cvShowImage("Output", contourImage);
+
+            // Process contours
+            int width, height;
+            for (CvSeq* contour = contours; contour != 0; contour->h_next)
+            {
+                //cvFitEllipse(contours);
+                //TODO: Finish me
+            }
+
+
             // We need to pause a little each frame to make sure it doesn't
             // break
             cvWaitKey(10);
