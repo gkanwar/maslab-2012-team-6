@@ -8,8 +8,12 @@
 using namespace std;
 
 #define NUM_FRAMES_TO_AVERAGE 2
-#define RED_DISPARITY 40
-#define RED_THRESHOLD 100
+#define RED_DISPARITY 70
+#define RED_THRESHOLD 140
+#define CAMERA_NUM 0
+
+#define IMG_WIDTH 640
+#define IMG_HEIGHT 480
 
 class ImageProcessing
 {
@@ -17,6 +21,12 @@ class ImageProcessing
         // Create some class variables
         CvCapture* capture;
         IplImage* frame;
+        IplImage* hsvImage;
+        IplImage* normalized;
+        IplImage* ballImage;
+        IplImage* contourImage;
+        IplImage* contourImage3C;
+        CvMemStorage* storage;
 
         int numFrameCountdown;
 
@@ -24,8 +34,19 @@ class ImageProcessing
 
         ImageProcessing()
         {
+            // Create all the images
+            frame = cvCreateImage(cvSize(IMG_WIDTH, IMG_HEIGHT), IPL_DEPTH_8U, 3);
+            hsvImage = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
+            normalized = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
+            ballImage = cvCreateImage(cvGetSize(normalized), IPL_DEPTH_8U, 1);
+            contourImage = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
+            contourImage3C = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
+
+            // Create a CvMemStorage
+            storage = cvCreateMemStorage(0);
+
             // Set up the capture
-            capture = cvCaptureFromCAM(1);
+            capture = cvCaptureFromCAM(CAMERA_NUM);
 
             // Make some windows
             cvNamedWindow("Original", CV_WINDOW_AUTOSIZE);
@@ -98,7 +119,6 @@ class ImageProcessing
             */
 
             // Normalize luminosity somewhat - REDACTED!
-            IplImage* hsvImage = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
             cvCvtColor(frame, hsvImage, CV_BGR2HSV);
 
             for (int i = 0; i < hsvImage->height; i++)
@@ -110,13 +130,20 @@ class ImageProcessing
                 }
             }
 
-            IplImage* normalized = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
             cvCvtColor(hsvImage, normalized, CV_HSV2BGR);
 
             cvShowImage("Int2", normalized);
 
+            // Output hue - REDACTED!
+            /*
+            IplImage* hueImage = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 1);
+            IplImage* satImage = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 1);
+            IplImage* valImage = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 1);
+            cvSplit(hsvImage, hueImage, satImage, valImage, NULL);
+            cvShowImage("Int2", hueImage);
+            */
+
             // Filter the image for red balls
-            IplImage* ballImage = cvCreateImage(cvGetSize(normalized), IPL_DEPTH_8U, 1);
             for (int i = 0; i < normalized->height; i++)
             {
                 for (int j = 0; j < normalized->width; j++)
@@ -140,15 +167,14 @@ class ImageProcessing
             cvShowImage("Intermediate", ballImage);
 
             // Get contours in the image
-            CvMemStorage* storage = cvCreateMemStorage(0);
             CvSeq* contours = NULL;
             cvFindContours(ballImage, storage, &contours);
             // Show it!
-            IplImage* contourImage = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
+            cvZero(contourImage);
             cvDrawContours(contourImage, contours, cvScalarAll(255), cvScalarAll(100), 1);
-            IplImage* contourImage3C = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 100);
             cvShowImage("Output", contourImage);
 
+            /*
             // Process contours
             int width, height;
             for (CvSeq* contour = contours; contour != 0; contour->h_next)
@@ -156,7 +182,7 @@ class ImageProcessing
                 //cvFitEllipse(contours);
                 //TODO: Finish me
             }
-
+            */
 
             // We need to pause a little each frame to make sure it doesn't
             // break
