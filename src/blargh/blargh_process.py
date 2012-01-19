@@ -2,7 +2,7 @@ from exceptions import ValueError
 from multiprocessing import Process, Pipe
 import time
 
-# Function that wraps a Blargh and is run in it's own process. It keeps track
+# Function that wraps a Blargh and is run in its own process. It keeps track
 # of the input pipes and output pipes to interface with other blargh processes.
 
 def blarghProcess(blargh, masterConn, inPipes, outPipes, async):
