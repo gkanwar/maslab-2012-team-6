@@ -5,7 +5,10 @@ import time
 
 from blargh.blargh_process import BlarghProcessStarter, cascadeBlarghProcesses, killAllBlarghProcesses
 from vision import VisionBlargh
-from pid import PIDBlargh
+from world import WorldBlargh
+from behavior import BehaviorBlargh
+from control import ControlBlargh
+
 from arduino import createArduinoInterface, ArduinoInterfaceInputWrapper, ArduinoInterfaceOutputWrapper
 
 # This is the master process, it should control everything. It's also
@@ -17,40 +20,39 @@ if __name__ == "__main__":
     masterConn, inputConn, outputConn = createArduinoInterface()
     arduinoInterfaceInputWrapper = ArduinoInterfaceInputWrapper(inputConn)
     arduinoInterfaceOutputWrapper = ArduinoInterfaceOutputWrapper(outputConn)
+    '''
+    Example for creating blargh structure:
+    b1 = ExampleBlargh1()
+    b2 = ExampleBlargh2()
+    b12 = CascadeBlargh(b1, b2)
+    b3 = ExampleBlargh3()
+    b3proc = createBlarghProcess(b12, False)
+    b12proc = createBlarghProcess(b12, True)
+    cascadeBlarghProcesses(b12proc, b3proc)
+    In this, the b12proc is asynchronous, so it will constantly step
+    b12 with "NONE" inputs every time. The b3proc is synchronous,
+    so it will wait for actual inputs coming in through the pipe to
+    step b3.
+    '''
 
-    # Example for creating blargh structure:
-    # b1 = ExampleBlargh1()
-    # b2 = ExampleBlargh2()
-    # b12 = CascadeBlargh(b1, b2)
-    # b3 = ExampleBlargh3()
-    # b3proc = createBlarghProcess(b12, False)
-    # b12proc = createBlarghProcess(b12, True)
-    # cascadeBlarghProcesses(b12proc, b3proc)
-    # In this, the b12proc is asynchronous, so it will constantly step
-    # b12 with "NONE" inputs every time. The b3proc is synchronous,
-    # so it will wait for actual inputs coming in through the pipe to
-    # step b3.
-    
+    #Create the structure for checkpoint 4.
+    vision = BlarghProcessStarter( VisionBlargh(), True )
+    world = BlarghProcessStarter( WorldBlargh(), False) #Async for Odometry purposes.
+    behavior = BlarghProcessStarter( BehaviorBlarg(), False) #Async because this will run quickly, and has timeouts, etc.
+    control = BlarghProcessStarter( ControlBlarg(), True )
 
-    # Create the blargh structure that we need
-    vision = VisionBlargh()
-    pid = PIDBlargh(arduinoInterfaceOutputWrapper)
+    cascadeBlarghProcesses(vision, world)
+    cascadeBlarghProcesses(world, behavior)
+    cascadeBlarghProcesses(behavior, control)
 
-    visionProcStarter = BlarghProcessStarter(vision, True)
-    pidProcStarter = BlarghProcessStarter(pid, False)
-
-    cascadeBlarghProcesses(visionProcStarter, pidProcStarter)
-
-    visionProc = visionProcStarter.start()
-    pidProc = pidProcStarter.start()
-
-    timer = time.time()
+    #Start Everything, and store it in a list.
+    processes = [ vision.start(), world.start(), behavior.start(), control.start() ]
 
     # TODO: Main timer loop, kill all processes when time runs out
-    while time.time() - timer < 5:
+    startTime = time.time()
+    while time.time() - startTime < 3 * 60:
         time.sleep(1)
 
-    print "Killing!"
-
-    killAllBlarghProcesses([visionProc, pidProc])
+    print "Killing Everything!"
+    killAllBlarghProcesses( processes )
     masterConn.send("KILL")
