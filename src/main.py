@@ -1,9 +1,11 @@
 import sys
 sys.path.append("../lib")
 
-from blargh.blargh_process import BlarghProcessStarter, cascadeBlarghProcesses
-from input import InputBlargh
-from behavior import BehaviorBlargh
+import time
+
+from blargh.blargh_process import BlarghProcessStarter, cascadeBlarghProcesses, killAllBlarghProcesses
+from vision import VisionBlargh
+from pid import PIDBlargh
 from arduino import createArduinoInterface, ArduinoInterfaceInputWrapper, ArduinoInterfaceOutputWrapper
 
 # This is the master process, it should control everything. It's also
@@ -31,17 +33,24 @@ if __name__ == "__main__":
     
 
     # Create the blargh structure that we need
-    input = InputBlargh(arduinoInterfaceInputWrapper)
-    behavior = BehaviorBlargh(arduinoInterfaceOutputWrapper)
+    vision = VisionBlargh()
+    pid = PIDBlargh(arduinoInterfaceOutputWrapper)
 
-    inputProcStarter = BlarghProcessStarter(input, True)
-    behaviorProcStarter = BlarghProcessStarter(behavior, False)
+    visionProcStarter = BlarghProcessStarter(vision, True)
+    pidProcStarter = BlarghProcessStarter(pid, False)
 
-    cascadeBlarghProcesses(inputProcStarter, behaviorProcStarter)
+    cascadeBlarghProcesses(visionProcStarter, pidProcStarter)
 
-    inputProc = inputProcStarter.start()
-    behaviorProc = behaviorProcStarter.start()
+    visionProc = visionProcStarter.start()
+    pidProc = pidProcStarter.start()
+
+    timer = time.time()
 
     # TODO: Main timer loop, kill all processes when time runs out
-    while True:
-        pass
+    while time.time() - timer < 5:
+        time.sleep(1)
+
+    print "Killing!"
+
+    killAllBlarghProcesses([visionProc, pidProc])
+    masterConn.send("KILL")

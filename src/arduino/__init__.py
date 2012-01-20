@@ -14,20 +14,16 @@ def arduinoInterface(masterConn, inputConn, outputConn, arduinoWrapper):
         cmd, arg = conn.recv()
         if (cmd == "IR"):
             # Send back the IR distance
-            print "IR request received"
             conn.send(arduinoWrapper.getIRSensorDist(arg))
         elif (cmd == "BUMP"):
-            print "BUMP request received"
             # Send back whether the bump sensor was hit or not
             conn.send(arduinoWrapper.getBumpSensorHit(arg))
         elif (cmd == "MOTOR"):
-            print "MOTOR comamnd received"
             motorNum, speed = arg
             # Set the motor speed via the wrapper
             arduinoWrapper.setMotorSpeed(motorNum, speed)
             conn.send("DONE")
         elif (cmd == "SERVO"):
-            print "SERVO command received"
             servoNum, angle = arg
             # Set the servo angle via the wrapper
             arduinoWrapper.setServoAngle(servoNum, angle)
@@ -79,7 +75,6 @@ class ArduinoInterfaceOutputWrapper():
         self.conn = conn
 
     def setMotorSpeed(self, motorNum, speed):
-        print "setMotorSpeed", (motorNum, speed)
         self.conn.send(("MOTOR", (motorNum, speed)))
         return self.conn.recv()
 
@@ -110,6 +105,9 @@ class ArduinoWrapper():
         self.ard.run()
 
     def stop(self):
+        for motor in self.motors:
+            motor.setValue(0)
+        time.sleep(0.5)
         self.ard.stop();
 
     # Helper functions to add all of our components

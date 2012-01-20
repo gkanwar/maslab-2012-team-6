@@ -1,3 +1,8 @@
-g++ -I/usr/local/include/opencv -c -fPIC foo.cpp -o foo.o
-g++ -shared -Wl,-soname,libfoo.so -o libfoo.so  foo.o -lcv -lhighgui
-python fooWrapper.py
+#! /bin/bash
+
+filename=vision.cpp
+libname=libvision.so
+
+g++ -I/usr/include/opencv -c -fPIC $filename -o temp.o
+g++ -shared -Wl,-soname,$libname -o $libname  temp.o -lcv -lhighgui -lcxcore
+rm temp.o
