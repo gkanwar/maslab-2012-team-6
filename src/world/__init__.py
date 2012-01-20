@@ -1,9 +1,7 @@
-#from blargh import Blargh
-def BallLocs():
-	return []
-import pygame
+from blargh import Blargh
+'''import pygame
 
-class WorldBlargh():#Blargh):
+class WorldBlargh(Blargh):
     """
     Class to take in input from various sources and generate a probability map
     of where walls and balls are likely to be relative to the robot.
@@ -150,11 +148,27 @@ class Map():
 
     def getAngleBetweenCoords(x1, y1, x2, y2):
         return atan2(x2 - x1, y2 - y1)
+'''
 
+#This object will be passed on to the BehaviorBlargh. It describes the state of the world around the robot.
+class World:
+	def __init__( self, balls, wallInFront ):
+		self.balls = balls
+		self.wallInFront = wallInFront
+	def isWallInFront( self ):
+		return self.wallInFront
+		
 
+#This Blargh takes input from the sensors and vision and aggregates it into a model of the world.
+#For now, this is pretty sparse. Just pass on data.
+class WorldBlargh( Blargh ):
+	def step( inp ):
+		world = World( [], False)
+		return world
+	
 # Testing code
 if __name__ == "__main__":
-    mb = MapperBlargh()
+    mb = WorldBlargh()
     import time
     for i in range(15):
         mb.translateRobot(1, 0)
