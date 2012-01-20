@@ -3,14 +3,7 @@ from math import pi
 import time
 import random
 
-#for debugging purposes
-class World:
-        isWall = False
-        balls = []
-        #Checks to see if the robot is about to run into a wall.
-        @staticmethod
-        def isWallInFront():
-                return World.isWall
+world = None
 
 #Behavior-related constants.
 BACKUP_TIME = 2
@@ -40,7 +33,7 @@ class EscapeState( State ):
         #Update the state.
         #If we hit a wall, stop what we're doing and escape the wall.
         #This SEEMS redundant, but it keeps us from turning into a situation we can't escape from.
-        if World.isWallInFront():
+        if world.isWallInFront():
             return EscapeState( time ), ( 0, 0 )
         #If we've hit the timeout, switch to driving straight.
         if ( time - self.startTime > BACKUP_TIME + TURN_TIME ):
@@ -59,11 +52,11 @@ class DriveStraightState( State ):
         #Update the state.
 
         #If we hit a wall, stop what we're doing and escape the wall.
-        if World.isWallInFront():
+        if world.isWallInFront():
             return EscapeState( time ), ( 0, 0 )
 
         #If we see a ball...
-        elif len( World.balls ) > 0 :
+        elif len( world.balls ) > 0 :
             return SeekBallState( time ), ( 0, 0 )
 
         #With 0.25 chance per second, switch to turning.
@@ -84,11 +77,11 @@ class TurnState( State ):
         #Update the state.
 
         #If we hit a wall, stop what we're doing and escape the wall.
-        if World.isWallInFront():
+        if world.isWallInFront():
             return EscapeState( time ), ( 0, 0 )
 
         #If we see a ball...
-        elif len( World.balls ) > 0 :
+        elif len( world.balls ) > 0 :
                 return SeekBallState( time ), ( 0, 0 )
 
         #With 0.25 chance per second, switch to driving forward.
@@ -105,16 +98,16 @@ class SeekBallState( State ):
     def step( self, time ):
 
         #If we hit a wall, stop what we're doing and escape the wall.
-        if World.isWallInFront():
+        if world.isWallInFront():
             return EscapeState( time ), ( 0, 0 )
 
         #If we've lost sight of all balls, go back to driving around.
-        if len( World.balls ) == 0 :
+        if len( world.balls ) == 0 :
                 return DriveStraightState( time ), ( 0, 0 )
 
         else:
             closestBall = None
-            for ball in World.balls:        
+            for ball in world.balls:        
                 if closestBall == None:
                     closestBall = ball
                     continue
@@ -134,7 +127,7 @@ class AquireBallState( State ):
         #Update the state.
 
         #If we hit a wall, stop what we're doing and escape the wall.
-        if World.isWallInFront():
+        if world.isWallInFront():
             return EscapeState( time ), ( 0, 0 )
         #If we've hit the timeout, switch to driving straight.
         if ( time - self.startTime > AQUIRE_TIME ):
@@ -158,36 +151,45 @@ class StateMachine:
 # previous state (BehaviorBlargh is also a state machine :P)
 class BehaviorBlargh(Blargh):
 
-    def __init__(self, arduinoInterfaceOutputWrapper):
-        # We use the arduinoInterfaceOutputWrapper to interact with the
-        # arduino interface process
-        self.arduinoInterface = arduinoInterfaceOutputWrapper
+    def __init__(self):
         # Set up the State Machine.
         self.StateMachine = StateMachine( DriveStraightState( time.time() ) )
 
-    def step(self, bumpSensorHit):
-        self.StateMachine.step( time.time() )
-        if self.StateMachine.goal[1] < 0:
-            print "TURNING LEFT!"
-        elif self.StateMachine.goal[1] > 0:
-            print "TURNING RIGHT!"
-        elif self.StateMachine.goal[0] == 0:
-            print "STILL."
-        elif self.StateMachine.goal[0] > 0:
-            print "GOING FORWARD!"
+    def step(self, new_world):
+	    global world
+
+	    #If the Blargh has been passed a new version of the world to deal with feed it in.
+	    if not new_world == None:
+		    world = new_world
+
+        #Act on the model of the world if we have one. Otherwise, return none.
+        if not world == None:
+            self.StateMachine.step( time.time() )
+            #TODO: The following code should be part of control in the short run, path planning in the longer run.
+            if self.StateMachine.goal[1] < 0:
+                print "TURNING LEFT!"
+            elif self.StateMachine.goal[1] > 0:
+                print "TURNING RIGHT!"
+            elif self.StateMachine.goal[0] == 0:
+                print "STILL."
+            elif self.StateMachine.goal[0] > 0:
+                print "GOING FORWARD!"
+            else:
+                print "BACKING UP!"
+	        return self.StateMachine.goal
         else:
-            print "BACKING UP!"
-	return self.StateMachine.goal
+            return None
 
 if __name__ == "__main__":
+        #This is kind of a unit test... I don't think it works anymore
         SM = StateMachine( DriveStraightState( time.time() ) )
         for i in range( 100 ):
                 SM.step( time.time() )
                 time.sleep(0.1)
-        World.isWall = True
+        world.isWall = True
         SM.step( time.time() )
-        World.isWall = False
-        World.balls = [ (1, .2), (2,.3) ]
+        world.isWall = False
+        world.balls = [ (1, .2), (2,.3) ]
         for i in range( 100 ):
                 SM.step( time.time() )
                 time.sleep(0.05)
