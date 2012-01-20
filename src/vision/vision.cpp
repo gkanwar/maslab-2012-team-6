@@ -5,6 +5,7 @@
 #include <cv.h>
 #include <highgui.h>
 #include <deque>
+#include <ctime>
 using namespace std;
 
 #define CAMERA_NUM 0
@@ -20,7 +21,6 @@ using namespace std;
 float eccentricity(int w, int h)
 {
     float output = abs(float(h-w)/float(h+w));
-    cout << "Ecc " << output << endl;
     return output;
 }
 
@@ -30,6 +30,7 @@ class ImageProcessing
         // Create some class variables
         CvCapture* capture;
         IplImage* frame;
+        IplImage* frameDown;
         IplImage* hsvImage;
         IplImage* normalized;
         IplImage* ballImage;
@@ -48,12 +49,13 @@ class ImageProcessing
         {
             // Create all the images
             frame = cvCreateImage(cvSize(IMG_WIDTH, IMG_HEIGHT), IPL_DEPTH_8U, 3);
-            hsvImage = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
-            normalized = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
+            frameDown = cvCreateImage(cvSize(320, 240), IPL_DEPTH_8U, 3);
+            hsvImage = cvCreateImage(cvGetSize(frameDown), IPL_DEPTH_8U, 3);
+            normalized = cvCreateImage(cvGetSize(hsvImage), IPL_DEPTH_8U, 3);
             ballImage = cvCreateImage(cvGetSize(normalized), IPL_DEPTH_8U, 1);
-            contourImage = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 1);
-            contourImage3C = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
-            ellipseImage = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
+            contourImage = cvCreateImage(cvGetSize(hsvImage), IPL_DEPTH_8U, 1);
+            contourImage3C = cvCreateImage(cvGetSize(hsvImage), IPL_DEPTH_8U, 3);
+            ellipseImage = cvCreateImage(cvGetSize(hsvImage), IPL_DEPTH_8U, 3);
 
             // Create a CvMemStorage
             contourStorage = cvCreateMemStorage(0);
@@ -73,8 +75,11 @@ class ImageProcessing
 
         void processBalls()
         {
+            cout << clock() << endl;
+
             // Get the frame
             frame = cvQueryFrame(capture);
+            cvPyrDown(frame, frameDown);
             // Display it
             cvShowImage("Original", frame);
 
@@ -135,7 +140,7 @@ class ImageProcessing
             */
 
             // Normalize luminosity somewhat - REDACTED!
-            cvCvtColor(frame, hsvImage, CV_BGR2HSV);
+            cvCvtColor(frameDown, hsvImage, CV_BGR2HSV);
 
             for (int i = 0; i < hsvImage->height; i++)
             {
@@ -147,6 +152,8 @@ class ImageProcessing
             }
 
             cvCvtColor(hsvImage, normalized, CV_HSV2BGR);
+
+            normalized = frameDown;
 
             cvShowImage("Int2", normalized);
 
@@ -166,7 +173,7 @@ class ImageProcessing
                 {
                     int ballImageIndex = i * ballImage->widthStep + j * ballImage->nChannels;
                     int frameIndex = i * normalized->widthStep + j * normalized->nChannels;
-                    uchar* imageData = (uchar*) frame->imageData;
+                    uchar* imageData = (uchar*) normalized->imageData;
                     if (imageData[frameIndex+2] >= imageData[frameIndex] + RED_DISPARITY
                           && imageData[frameIndex+2] >= imageData[frameIndex+1] + RED_DISPARITY
                           && imageData[frameIndex+2] >= RED_THRESHOLD)
@@ -196,7 +203,7 @@ class ImageProcessing
             {
                 CvSeq* listOfPoints = cvCreateSeq(CV_SEQ_ELTYPE_POINT, sizeof(CvSeq), sizeof(CvPoint), pointStorage);
                 numPoints = contour->total;
-                if (numPoints <= 20)
+                if (numPoints <= 6)
                 {
                     continue;
                 }
@@ -211,7 +218,6 @@ class ImageProcessing
                 }
                 else
                 {
-                    cout << "Ecc ellipse" << endl;
                     cvDrawContours(contourImage, contour, CV_RGB(0xff, 0xff, 0xff), CV_RGB(0x99, 0x99, 0x99), -1);
                 }
             }
