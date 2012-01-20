@@ -177,6 +177,7 @@ class BehaviorBlargh(Blargh):
             print "GOING FORWARD!"
         else:
             print "BACKING UP!"
+	return self.StateMachine.goal
 
 if __name__ == "__main__":
         SM = StateMachine( DriveStraightState( time.time() ) )
