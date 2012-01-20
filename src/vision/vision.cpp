@@ -139,7 +139,7 @@ class ImageProcessing
             cvShowImage("Output", averaged);
             */
 
-            // Normalize luminosity somewhat - REDACTED!
+            // Normalize luminosity somewhat
             cvCvtColor(frameDown, hsvImage, CV_BGR2HSV);
 
             for (int i = 0; i < hsvImage->height; i++)
