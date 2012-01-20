@@ -2,18 +2,27 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <opencv/cv.h>
-#include <opencv/highgui.h>
+#include <cv.h>
+#include <highgui.h>
 #include <deque>
 using namespace std;
 
-#define NUM_FRAMES_TO_AVERAGE 2
-#define RED_DISPARITY 70
-#define RED_THRESHOLD 140
 #define CAMERA_NUM 0
+#define NUM_FRAMES_TO_AVERAGE 2
+
+#define RED_DISPARITY 100
+#define RED_THRESHOLD 60
+#define ECCENTRICITY_THRESHOLD 0.1
 
 #define IMG_WIDTH 640
 #define IMG_HEIGHT 480
+
+float eccentricity(int w, int h)
+{
+    float output = abs(float(h-w)/float(h+w));
+    cout << "Ecc " << output << endl;
+    return output;
+}
 
 class ImageProcessing
 {
@@ -26,7 +35,10 @@ class ImageProcessing
         IplImage* ballImage;
         IplImage* contourImage;
         IplImage* contourImage3C;
-        CvMemStorage* storage;
+        IplImage* ellipseImage;
+        CvMemStorage* contourStorage;
+        CvMemStorage* houghStorage;
+        CvMemStorage* pointStorage;
 
         int numFrameCountdown;
 
@@ -39,11 +51,14 @@ class ImageProcessing
             hsvImage = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
             normalized = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
             ballImage = cvCreateImage(cvGetSize(normalized), IPL_DEPTH_8U, 1);
-            contourImage = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
+            contourImage = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 1);
             contourImage3C = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
+            ellipseImage = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
 
             // Create a CvMemStorage
-            storage = cvCreateMemStorage(0);
+            contourStorage = cvCreateMemStorage(0);
+            houghStorage = cvCreateMemStorage(0);
+            pointStorage = cvCreateMemStorage(0);
 
             // Set up the capture
             capture = cvCaptureFromCAM(CAMERA_NUM);
@@ -53,6 +68,7 @@ class ImageProcessing
             cvNamedWindow("Output", CV_WINDOW_AUTOSIZE);
             cvNamedWindow("Intermediate", CV_WINDOW_AUTOSIZE);
             cvNamedWindow("Int2", CV_WINDOW_AUTOSIZE);
+            cvNamedWindow("Ellipse", CV_WINDOW_AUTOSIZE);
         }
 
         void processBalls()
@@ -151,7 +167,7 @@ class ImageProcessing
                     int ballImageIndex = i * ballImage->widthStep + j * ballImage->nChannels;
                     int frameIndex = i * normalized->widthStep + j * normalized->nChannels;
                     uchar* imageData = (uchar*) frame->imageData;
-                    if(imageData[frameIndex+2] >= imageData[frameIndex] + RED_DISPARITY
+                    if (imageData[frameIndex+2] >= imageData[frameIndex] + RED_DISPARITY
                           && imageData[frameIndex+2] >= imageData[frameIndex+1] + RED_DISPARITY
                           && imageData[frameIndex+2] >= RED_THRESHOLD)
                     {
@@ -168,21 +184,52 @@ class ImageProcessing
 
             // Get contours in the image
             CvSeq* contours = NULL;
-            cvFindContours(ballImage, storage, &contours);
+            cvFindContours(ballImage, contourStorage, &contours);
             // Show it!
-            cvZero(contourImage);
-            cvDrawContours(contourImage, contours, cvScalarAll(255), cvScalarAll(100), 1);
-            cvShowImage("Output", contourImage);
 
-            /*
-            // Process contours
-            int width, height;
-            for (CvSeq* contour = contours; contour != 0; contour->h_next)
+            // Process contours with fit ellipse
+            int width, height, numPoints;
+            cvZero(ellipseImage);
+            cvZero(contourImage);
+            CvBox2D ellipseBound;
+            for (CvSeq* contour = contours; contour != 0; contour = contour->h_next)
             {
-                //cvFitEllipse(contours);
-                //TODO: Finish me
+                CvSeq* listOfPoints = cvCreateSeq(CV_SEQ_ELTYPE_POINT, sizeof(CvSeq), sizeof(CvPoint), pointStorage);
+                numPoints = contour->total;
+                if (numPoints <= 20)
+                {
+                    continue;
+                }
+                for (int i = 0; i < numPoints; i++)
+                {
+                    cvSeqPush(listOfPoints, CV_GET_SEQ_ELEM(CvPoint, contour, i));
+                }
+                ellipseBound = cvFitEllipse2(listOfPoints);
+                if (eccentricity(ellipseBound.size.width, ellipseBound.size.height) <= ECCENTRICITY_THRESHOLD)
+                {
+                    cvEllipse(ellipseImage, cvPoint(ellipseBound.center.x, ellipseBound.center.y), cvSize(ellipseBound.size.width/2, ellipseBound.size.height/2), -ellipseBound.angle, 0, 360, CV_RGB(0, 0xff, 0));
+                }
+                else
+                {
+                    cout << "Ecc ellipse" << endl;
+                    cvDrawContours(contourImage, contour, CV_RGB(0xff, 0xff, 0xff), CV_RGB(0x99, 0x99, 0x99), -1);
+                }
             }
-            */
+            cvShowImage("Ellipse", contourImage);
+
+            // Process contours with a houghTransform
+            CvSeq* houghCircles = cvHoughCircles(contourImage, houghStorage, CV_HOUGH_GRADIENT, 3, 5, 10, 50);
+            // Draw them
+            for (int i = 0; i < houghCircles->total; i++)
+            {
+                float* p = (float*) cvGetSeqElem(houghCircles, i);
+                CvPoint pt = cvPoint(cvRound(p[0]), cvRound(p[1]));
+                cvCircle(ellipseImage, pt, cvRound(p[2]), CV_RGB(0xff, 0, 0));
+            }
+
+            cvShowImage("Output", ellipseImage);
+
+
 
             // We need to pause a little each frame to make sure it doesn't
             // break
