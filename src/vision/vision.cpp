@@ -86,7 +86,7 @@ class ImageProcessing
             // Create all the images
             hsvImage = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
             normalized = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
-            ballImage = cvCreateImage(cvGetSize(normalized), IPL_DEPTH_8U, 1);
+            ballImage = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 1);
             contourImage = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 1);
             contourImage3C = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
             ellipseImage = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);

@@ -5,7 +5,10 @@ import time
 # Function that wraps a Blargh and is run in its own process. It keeps track
 # of the input pipes and output pipes to interface with other blargh processes.
 
-def blarghProcess(blargh, masterConn, inPipes, outPipes, async):
+def blarghProcess(BlarghClass, args, masterConn, inPipes, outPipes, async):
+
+    # Initialize the blargh
+    blargh = BlarghClass(*args)
 
     # Handle a tuple input from the master process
     def handleMasterInput(inp):
@@ -78,8 +81,9 @@ def cascadeBlarghProcesses(bps1, bps2):
 # all the connections, then call start on all the BlarghProcessStarters
 # to actaully start them.
 class BlarghProcessStarter():
-    def __init__(self, blargh, async):
-        self.blargh = blargh
+    def __init__(self, BlarghClass, args, async):
+        self.BlarghClass = BlarghClass
+        self.args = args
         self.async = async
         self.inPipes = []
         self.outPipes = []
@@ -95,7 +99,7 @@ class BlarghProcessStarter():
     # contains the process and pipe to it
     def start(self):
         parentMasterConn, childMasterConn = Pipe()
-        proc = Process(target = blarghProcess, args = (self.blargh, childMasterConn, self.inPipes, self.outPipes, self.async))
+        proc = Process(target = blarghProcess, args = (self.BlarghClass, self.args, childMasterConn, self.inPipes, self.outPipes, self.async))
         proc.start()
         return BlarghMaster(proc, parentMasterConn)
 

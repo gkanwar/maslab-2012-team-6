@@ -1,6 +1,7 @@
 from ctypes import *
 # Load the C++ library
-visionlib = cdll.LoadLibrary('./vision/libvision.so')
+import os
+visionlib = cdll.LoadLibrary(os.path.dirname(os.path.abspath(__file__)) + '/libvision.so')
 # Set the return types
 visionlib.createObj.restype = c_int
 visionlib.processBalls.restype = c_int
@@ -26,6 +27,7 @@ class Vision(object):
         return visionlib.getTheta(self.obj, index)
 
 # Example code
+
 if __name__ == "__main__":
     v = Vision()
     while True:
