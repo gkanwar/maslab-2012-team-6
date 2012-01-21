@@ -12,8 +12,10 @@ class ControlBlargh(Blargh):
         self.goal = None
     
     def step(self, goal):
+        print "ControlBlargh: Receiving",goal
         if not goal == None:
             self.goal = goal
+            print "ControlBlargh: Updating my goal!"
         if not self.goal == None:
             if(abs(self.goal[1])>angleThreshold):
                 pval = anglePID(goal[1])

@@ -163,7 +163,8 @@ class BehaviorBlargh(Blargh):
         #Act on the model of the world if we have one. Otherwise, return None.
         if not world == None:
             self.StateMachine.step( time.time() )
-            #TODO: The following code should be part of control in the short run, path planning in the longer run.
+            print "BehaviorBlargh: Sending",self.StateMachine.goal
+            '''#TODO: The following code should be part of control in the short run, path planning in the longer run.
             if self.StateMachine.goal[1] < 0:
                 print "TURNING LEFT!"
             elif self.StateMachine.goal[1] > 0:
@@ -173,7 +174,7 @@ class BehaviorBlargh(Blargh):
             elif self.StateMachine.goal[0] > 0:
                 print "GOING FORWARD!"
             else:
-                print "BACKING UP!"
+                print "BACKING UP!"'''
 	        return self.StateMachine.goal
         else:
             return None
