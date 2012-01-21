@@ -5,7 +5,8 @@
 #include <cv.h>
 #include <highgui.h>
 #include <deque>
-#include <ctime>
+#include <pthread.h>
+
 using namespace std;
 
 #define CAMERA_NUM 0
@@ -21,16 +22,35 @@ using namespace std;
 float eccentricity(int w, int h)
 {
     float output = abs(float(h-w)/float(h+w));
+    cout << "Ecc " << output << endl;
     return output;
 }
+
+// Thread object
+pthread_t frameCapture;
+// Thread kill received
+bool killReceived = false;
+// Global variables for image capturing
+CvCapture* capture;
+IplImage* frame;
+
+
+// Frame capture thread, constantly queries the frame
+void* frameCaptureThread(void* ptr)
+{
+    // Constantly query frame
+    while (!killReceived)
+    {
+        frame = cvQueryFrame(capture);
+    }
+}
+
+
 
 class ImageProcessing
 {
     public:
         // Create some class variables
-        CvCapture* capture;
-        IplImage* frame;
-        IplImage* frameDown;
         IplImage* hsvImage;
         IplImage* normalized;
         IplImage* ballImage;
@@ -47,23 +67,23 @@ class ImageProcessing
 
         ImageProcessing()
         {
-            // Create all the images
+            // Set up the capture
+            capture = cvCaptureFromCAM(CAMERA_NUM);
+            // Set up the frame
             frame = cvCreateImage(cvSize(IMG_WIDTH, IMG_HEIGHT), IPL_DEPTH_8U, 3);
-            frameDown = cvCreateImage(cvSize(320, 240), IPL_DEPTH_8U, 3);
-            hsvImage = cvCreateImage(cvGetSize(frameDown), IPL_DEPTH_8U, 3);
-            normalized = cvCreateImage(cvGetSize(hsvImage), IPL_DEPTH_8U, 3);
+
+            // Create all the images
+            hsvImage = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
+            normalized = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
             ballImage = cvCreateImage(cvGetSize(normalized), IPL_DEPTH_8U, 1);
-            contourImage = cvCreateImage(cvGetSize(hsvImage), IPL_DEPTH_8U, 1);
-            contourImage3C = cvCreateImage(cvGetSize(hsvImage), IPL_DEPTH_8U, 3);
-            ellipseImage = cvCreateImage(cvGetSize(hsvImage), IPL_DEPTH_8U, 3);
+            contourImage = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 1);
+            contourImage3C = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
+            ellipseImage = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
 
             // Create a CvMemStorage
             contourStorage = cvCreateMemStorage(0);
             houghStorage = cvCreateMemStorage(0);
             pointStorage = cvCreateMemStorage(0);
-
-            // Set up the capture
-            capture = cvCaptureFromCAM(CAMERA_NUM);
 
             // Make some windows
             cvNamedWindow("Original", CV_WINDOW_AUTOSIZE);
@@ -71,15 +91,19 @@ class ImageProcessing
             cvNamedWindow("Intermediate", CV_WINDOW_AUTOSIZE);
             cvNamedWindow("Int2", CV_WINDOW_AUTOSIZE);
             cvNamedWindow("Ellipse", CV_WINDOW_AUTOSIZE);
+
+
+            pthread_create(&frameCapture, NULL, frameCaptureThread, NULL);
+        }
+
+        ~ImageProcessing()
+        {
+            killReceived = true;
+            pthread_join(frameCapture, NULL);
         }
 
         void processBalls()
         {
-            cout << clock() << endl;
-
-            // Get the frame
-            frame = cvQueryFrame(capture);
-            cvPyrDown(frame, frameDown);
             // Display it
             cvShowImage("Original", frame);
 
@@ -140,7 +164,7 @@ class ImageProcessing
             */
 
             // Normalize luminosity somewhat
-            cvCvtColor(frameDown, hsvImage, CV_BGR2HSV);
+            cvCvtColor(frame, hsvImage, CV_BGR2HSV);
 
             for (int i = 0; i < hsvImage->height; i++)
             {
@@ -152,8 +176,6 @@ class ImageProcessing
             }
 
             cvCvtColor(hsvImage, normalized, CV_HSV2BGR);
-
-            normalized = frameDown;
 
             cvShowImage("Int2", normalized);
 
@@ -173,7 +195,7 @@ class ImageProcessing
                 {
                     int ballImageIndex = i * ballImage->widthStep + j * ballImage->nChannels;
                     int frameIndex = i * normalized->widthStep + j * normalized->nChannels;
-                    uchar* imageData = (uchar*) normalized->imageData;
+                    uchar* imageData = (uchar*) frame->imageData;
                     if (imageData[frameIndex+2] >= imageData[frameIndex] + RED_DISPARITY
                           && imageData[frameIndex+2] >= imageData[frameIndex+1] + RED_DISPARITY
                           && imageData[frameIndex+2] >= RED_THRESHOLD)
@@ -203,7 +225,7 @@ class ImageProcessing
             {
                 CvSeq* listOfPoints = cvCreateSeq(CV_SEQ_ELTYPE_POINT, sizeof(CvSeq), sizeof(CvPoint), pointStorage);
                 numPoints = contour->total;
-                if (numPoints <= 6)
+                if (numPoints <= 20)
                 {
                     continue;
                 }
@@ -218,6 +240,7 @@ class ImageProcessing
                 }
                 else
                 {
+                    cout << "Ecc ellipse" << endl;
                     cvDrawContours(contourImage, contour, CV_RGB(0xff, 0xff, 0xff), CV_RGB(0x99, 0x99, 0x99), -1);
                 }
             }
@@ -234,8 +257,6 @@ class ImageProcessing
             }
 
             cvShowImage("Output", ellipseImage);
-
-
 
             // We need to pause a little each frame to make sure it doesn't
             // break
