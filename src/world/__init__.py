@@ -152,20 +152,20 @@ class Map():
 
 #This object will be passed on to the BehaviorBlargh. It describes the state of the world around the robot.
 class World:
-	def __init__( self, balls, wallInFront ):
-		self.balls = balls
-		self.wallInFront = wallInFront
-	def isWallInFront( self ):
-		return self.wallInFront
-		
+    def __init__( self, balls, wallInFront ):
+        self.balls = balls
+        self.wallInFront = wallInFront
+    def isWallInFront( self ):
+        return self.wallInFront
+        
 
 #This Blargh takes input from the sensors and vision and aggregates it into a model of the world.
 #For now, this is pretty sparse. Just pass on data.
 class WorldBlargh( Blargh ):
-	def step( inp ):
-		world = World( [], False)
-		return world
-	
+    def step( self, inp ):
+        world = World( [], False)
+        return world
+    
 # Testing code
 if __name__ == "__main__":
     '''mb = WorldBlargh()
