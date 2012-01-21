@@ -12,7 +12,7 @@ class ControlBlargh(Blargh):
         self.goal = None
     
     def step(self, goal):
-        if not self.goal == None:
+        if not goal == None:
             self.goal = goal
         if not self.goal == None:
             if(self.goal[0]>angleThreshold):
