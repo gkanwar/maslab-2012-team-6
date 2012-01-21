@@ -9,15 +9,15 @@ class ControlBlargh(Blargh):
         self.arduinoInterface = arduinoInterface
         self.angleThreshold = .2
         self.driveThreshold = .3
-        self.anglePID = PID(self, (.2,0,0))
-        self.drivePID = PID(self, (.3,0,0))
+        self.anglePID = PID((.2,0,0))
+        self.drivePID = PID((.3,0,0))
     
     def step(self, goal):
-        if(goal[0]>angleThreshold)
+        if(goal[0]>angleThreshold):
             pval = anglePID(goal[0])
             self.arduinoInterface.setMotorSpeed(0, pval)
             self.arduinoInterface.setMotorSpeed(1, -pval)
-        if(goal[1]>driveThreshold)
+        if(goal[1]>driveThreshold):
             pval = drivePID(goal[1])
             self.arduinoInterface.setMotorSpeed(0, pval)
             self.arduinoInterface.setMotorSpeed(1, pval)

@@ -168,9 +168,9 @@ class WorldBlargh( Blargh ):
 	
 # Testing code
 if __name__ == "__main__":
-    mb = WorldBlargh()
+    '''mb = WorldBlargh()
     import time
     for i in range(15):
         mb.translateRobot(1, 0)
         mb.showMap()
-        time.sleep(1)
+        time.sleep(1)'''

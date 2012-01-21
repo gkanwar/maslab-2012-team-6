@@ -4,10 +4,10 @@ sys.path.append("../lib")
 import time
 
 from blargh.blargh_process import BlarghProcessStarter, cascadeBlarghProcesses, killAllBlarghProcesses
-from vision import VisionBlargh
+#from vision import VisionBlargh
 from world import WorldBlargh
 from behavior import BehaviorBlargh
-from control import ControlBlargh
+from controls import ControlBlargh
 
 #from arduino import createArduinoInterface, ArduinoInterfaceInputWrapper, ArduinoInterfaceOutputWrapper
 
@@ -40,17 +40,17 @@ if __name__ == "__main__":
     '''
 
     #Create the structure for checkpoint 4.
-    vision = BlarghProcessStarter( VisionBlargh(), True )
+    #vision = BlarghProcessStarter( VisionBlargh(), True )
     world = BlarghProcessStarter( WorldBlargh(), False) #Async for Odometry purposes.
-    behavior = BlarghProcessStarter( BehaviorBlarg(), False) #Async because this has timeouts, etc.
-    control = BlarghProcessStarter( ControlBlarg( FakeInterface() ), True )
+    behavior = BlarghProcessStarter( BehaviorBlargh(), False) #Async because this has timeouts, etc.
+    control = BlarghProcessStarter( ControlBlargh( FakeInterface() ), True )
 
-    cascadeBlarghProcesses(vision, world)
+    #cascadeBlarghProcesses(vision, world)
     cascadeBlarghProcesses(world, behavior)
     cascadeBlarghProcesses(behavior, control)
 
     #Start Everything, and store it in a list.
-    processes = [ vision.start(), world.start(), behavior.start(), control.start() ]
+    processes = [ world.start(), behavior.start(), control.start() ]
 
     # TODO: Main timer loop, kill all processes when time runs out
     startTime = time.time()
