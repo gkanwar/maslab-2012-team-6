@@ -39,7 +39,7 @@ if __name__ == "__main__":
     vision = BlarghProcessStarter( VisionBlargh(), True )
     world = BlarghProcessStarter( WorldBlargh(), False) #Async for Odometry purposes.
     behavior = BlarghProcessStarter( BehaviorBlarg(), False) #Async because this has timeouts, etc.
-    control = BlarghProcessStarter( ControlBlarg(), True )
+    control = BlarghProcessStarter( ControlBlarg( arduinoInterfaceOutputWrapper ), True )
 
     cascadeBlarghProcesses(vision, world)
     cascadeBlarghProcesses(world, behavior)
