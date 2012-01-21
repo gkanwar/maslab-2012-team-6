@@ -2,23 +2,14 @@
 
 import pygame
 import math
-from math import pi, sin, cos, sqrt
+from math import pi, sin, cos, sqrt, atan2
 import time
 import random
 
-#Because we need the correct angle, and atan2 doesn't seem to do what it says in documentation, this is my rewrite...
+#Converts a point in x, y space to r, theta space
 def toPolar( x, y ):
     r = sqrt( x**2 + y**2 )
-    angle = 0
-    if not x == 0:
-        angle = math.atan( y / x )
-    if x < 0:
-        angle = -1 * angle
-    while angle > 2 * pi:
-        angle += -2 * pi
-    while angle < 0:
-        angle += 2 * pi
-    print ( x, y ),"goes to",( r, angle )
+    angle = atan2( y, x )
     return ( r, angle )
 
 #Because the simulator measures things in inches, and inches are pretty big unit,
@@ -36,7 +27,7 @@ class Simulator:
         self.ySize = 100
 
         self.robot = Robot( ( self.xSize / 2 , self.ySize / 2 ) )
-        self.balls = [ Ball( ( random.randint( 0, self.xSize ), random.randint( 0, self.ySize ) ), self.robot ) for i in range( 50 ) ]
+        self.balls = [ Ball( ( random.randint( 0, self.xSize ), random.randint( 0, self.ySize ) ), self.robot ) for i in range( 5 ) ]
         
         self.objects = []
         self.objects.extend( self.balls  )
@@ -136,8 +127,8 @@ class Robot( Object ):
         self.sightedBalls = [] #Clear out the sighted balls
         for ball in balls:
             #Find the theta of the of the ball with respect to the polar coordante system centered on the robot.
-            r, theta = toPolar( ball.x - self.x, ball.y - self.y )
-            theta -= self.heading
+            r, theta = toPolar( ball.y - self.y, ball.x - self.x )
+            theta = self.heading - theta
             
             #Make sure theta is between -pi and pi            
             while theta > pi:
@@ -166,10 +157,10 @@ class Ball( Object ):
             color = (255, 255, 0 )
         pygame.draw.circle( screen, color, ( int( PIXELS_PER_INCH * self.x ), int( PIXELS_PER_INCH * self.y ) ), int( PIXELS_PER_INCH * 0.875 ) )
     
-
-S = Simulator()
-S.robot.leftMotorSaturation = 1
-S.robot.rightMotorSaturation = -1
-while True:
-    S.step()
-    S.draw()
+if __name__ == "__main__":
+    S = Simulator()
+    S.robot.leftMotorSaturation = 1
+    S.robot.rightMotorSaturation = 0.3
+    while True:
+        S.step()
+        S.draw()
