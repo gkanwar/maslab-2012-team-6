@@ -2,27 +2,14 @@
 
 import pygame
 import math
-from math import pi, sin, cos, sqrt
+from math import pi, sin, cos, sqrt, atan2
 import time
 import random
 
-#Because we need the correct angle, and atan2 doesn't seem to do what it says in documentation, this is my rewrite...
+#Converts a point in x, y space to r, theta space
 def toPolar( x, y ):
     r = sqrt( x**2 + y**2 )
-    angle = 0
-    if not x == 0:
-        angle = math.atan( y / x )
-    if (x == 0 and y > 0):
-        angle = pi / 2
-    if (x == 0 and y < 0):
-        angle = -pi / 2
-    if x < 0:
-        angle = pi + angle
-    while angle > 2 * pi:
-        angle += -2 * pi
-    while angle < 0:
-        angle += 2 * pi
-    #print ( x, y ),"goes to",( r, angle )
+    angle = atan2( y, x )
     return ( r, angle )
 
 #Because the simulator measures things in inches, and inches are pretty big unit,
@@ -40,7 +27,7 @@ class Simulator:
         self.ySize = 100
 
         self.robot = Robot( ( self.xSize / 2 , self.ySize / 2 ) )
-        self.balls = [ Ball( ( random.randint( 0, self.xSize ), random.randint( 0, self.ySize ) ), self.robot ) for i in range( 50 ) ]
+        self.balls = [ Ball( ( random.randint( 0, self.xSize ), random.randint( 0, self.ySize ) ), self.robot ) for i in range( 5 ) ]
         
         self.objects = []
         self.objects.extend( self.balls  )
