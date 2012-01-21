@@ -9,8 +9,8 @@ PIXELS_PER_INCH = 10
 class Simulator:
     def __init__(self):
         # Initialize variables
-        self.map = Map()
         self.robot = Robot( 30, 30 )
+        self.objects = [ self.robot ]
 
         self.xSize = 60
         self.ySize = 60
@@ -20,19 +20,31 @@ class Simulator:
         self.screen = pygame.display.set_mode( ( PIXELS_PER_INCH * self.xSize, PIXELS_PER_INCH * self.ySize ) )
 
     def draw(self):
-        """
-        Use the pygame library to draw the world and the robot.
-        """
+        #Draw
         # Clear the screen
         self.screen.fill( (0, 0, 0) )
 
-        # Draw the robot
-        pygame.draw.circle( self.screen, (0, 0, 255), ( int( PIXELS_PER_INCH * self.robot.x ), int( PIXELS_PER_INCH * self.robot.y ) ), int( PIXELS_PER_INCH * self.robot.radius ) )
-        pygame.draw.line( self.screen, (0, 255, 0), ( int( PIXELS_PER_INCH * self.robot.x ), int( PIXELS_PER_INCH * self.robot.y ) ), ( int( PIXELS_PER_INCH * ( self.robot.x + ( self.robot.radius * math.sin( self.robot.heading ) ) ) ), int( PIXELS_PER_INCH * ( self.robot.y + ( self.robot.radius * math.cos( self.robot.heading ) ) ) ) ) )
+        # Draw each object
+        for obj in self.objects:
+            obj.draw( self.screen )
+
         #Flip the buffers (display everything)
         pygame.display.flip()
 
-class Robot():
+    def step( self ):
+        #Step all the objects...
+        for obj in self.objects:
+            obj.step()
+
+class Object():
+    def step( self ):
+        pass
+
+    #No invisible objects
+    def draw( self, screen ):
+        raise NotImplementedError
+
+class Robot( Object ):
     """ Class to keep track of the robot. """
     def __init__(self, x, y):
         self.x = x
@@ -51,12 +63,6 @@ class Robot():
 
         self.maxMotorSpeed = 20
 
-    def setMotorSpeed( self, motorNum, speed ):
-        if motorNum == 0:
-            self.leftMotorSaturation = speed
-        elif motorNum == 1:
-            self.rightMotorSaturation = speed
-
     #Update the Robot's position
     def step( self ):
         currentTime = time.time()
@@ -72,68 +78,24 @@ class Robot():
         
         self.lastTime = currentTime
 
+    def draw( self, screen ):
+        pygame.draw.circle( screen, (0, 0, 255), ( int( PIXELS_PER_INCH * self.x ), int( PIXELS_PER_INCH * self.y ) ), int( PIXELS_PER_INCH * self.radius ) )
+        pygame.draw.line( screen, (0, 255, 0), ( int( PIXELS_PER_INCH * self.x ), int( PIXELS_PER_INCH * self.y ) ), ( int( PIXELS_PER_INCH * ( self.x + ( self.radius * math.sin( self.heading ) ) ) ), int( PIXELS_PER_INCH * ( self.y + ( self.radius * math.cos( self.heading ) ) ) ) ) )
+
+    def setMotorSpeed( self, motorNum, speed ):
+        if motorNum == 0:
+            self.leftMotorSaturation = speed
+        elif motorNum == 1:
+            self.rightMotorSaturation = speed
+
     def setCoords(self, x, y):
         """ Set the x, y coords of the robot. """
         self.x = x
         self.y = y
 
-class Map():
-    def __init__(self):
-        self.maxX = 0
-        self.maxY = 0
-        self.minX = 0
-        self.minY = 0
-        self.wallGrid = {}
-        self.ballGrid = {}
-
-
-    # Overload the [] operator
-    def __getitem__(self, key):
-        if (key in self.wallGrid.keys()):
-            val1 = self.grid[key]
-        else:
-            val1 = None
-        if (key in self.ballGrid.keys()):
-            val2 = self.grid[key]
-        else:
-            val2 = None
-        return (val1, val2)
-    def __setitem__(self, key, value):
-        val1, val2 = value
-        wallGrid[key] = val1
-        ballGrid[key] = val2
-
-    def setRobotLocation(self, x, y):
-        """ Set the robot location to an arbitrary x, y coord. """
-        self.robot.setLocation(x, y)
-        self.expandMapForRobot()
-
-    def translateRobot(self, dx, dy):
-        """ Set the robot location to be dx, dy greater than before. """
-        self.robot.translate(dx, dy)
-        self.expandMapForRobot()
-
-    def expandMapForRobot(self):
-        """ Expand the map to make sure the robot coords are in it """
-        self.expandMapForCoord(self.robot.x, self.robot.y)
-
-    def expandMapForCoord(self, x, y):
-        """ Expand the map to make sure the coord is inside it. """
-        if (x > self.maxX):
-            self.maxX = x
-        elif (x < self.minX):
-            self.minX = x
-        if (y > self.maxY):
-            self.maxY = y
-        elif (y < self.minY):
-            self.minY = y
-
-    def getAngleBetweenCoords(x1, y1, x2, y2):
-        return atan2(x2 - x1, y2 - y1)
-
 S = Simulator()
 S.robot.leftMotorSaturation = 1.0
 S.robot.rightMotorSaturation = 0.3
 while True:
-    S.robot.step()
+    S.step()
     S.draw()
