@@ -1,7 +1,5 @@
 from blargh import Blargh
 import time
-# comment here
-
 
 class ControlBlargh(Blargh):
     
@@ -11,16 +9,20 @@ class ControlBlargh(Blargh):
         self.driveThreshold = .3
         self.anglePID = PID((.2,0,0))
         self.drivePID = PID((.3,0,0))
+        self.goal = None
     
     def step(self, goal):
-        if(goal[0]>angleThreshold):
-            pval = anglePID(goal[0])
-            self.arduinoInterface.setMotorSpeed(0, pval)
-            self.arduinoInterface.setMotorSpeed(1, -pval)
-        if(goal[1]>driveThreshold):
-            pval = drivePID(goal[1])
-            self.arduinoInterface.setMotorSpeed(0, pval)
-            self.arduinoInterface.setMotorSpeed(1, pval)
+        if not self.goal == None:
+            self.goal = goal
+        if not self.goal == None:
+            if(self.goal[0]>angleThreshold):
+                pval = anglePID(goal[0])
+                self.arduinoInterface.setMotorSpeed(0, pval)
+                self.arduinoInterface.setMotorSpeed(1, -pval)
+            if(self.goal[1]>driveThreshold):
+                pval = drivePID(goal[1])
+                self.arduinoInterface.setMotorSpeed(0, pval)
+                self.arduinoInterface.setMotorSpeed(1, pval)
 
 
 class PID:
