@@ -7,15 +7,19 @@ import time
 import random
 
 #Because we need the correct angle, and atan2 doesn't seem to do what it says in documentation, this is my rewrite...
-def atan( x, y ):
-    angle = math.atan( y / x )
+def toPolar( x, y ):
+    r = sqrt( x**2 + y**2 )
+    angle = 0
+    if not x == 0:
+        angle = math.atan( y / x )
     if x < 0:
         angle = -1 * angle
     while angle > 2 * pi:
         angle += -2 * pi
     while angle < 0:
         angle += 2 * pi
-    return angle
+    print ( x, y ),"goes to",( r, angle )
+    return ( r, angle )
 
 #Because the simulator measures things in inches, and inches are pretty big unit,
 #We need to scale everything by this constant factor when drawing.
@@ -103,7 +107,7 @@ class Robot( Object ):
         currentTime = time.time()
         delTime = currentTime - self.lastTime
 
-        #I'm assuming this function gets called pretty often, so I can decouple.
+        #I'm assuming this function gets called pretty often, so I can decouple the motions.
         avgSpeed = self.maxMotorSpeed * ( self.leftMotorSaturation + self.rightMotorSaturation ) / 2
         self.x += delTime * avgSpeed * sin( self.heading )
         self.y += delTime * avgSpeed * cos( self.heading )
@@ -132,7 +136,8 @@ class Robot( Object ):
         self.sightedBalls = [] #Clear out the sighted balls
         for ball in balls:
             #Find the theta of the of the ball with respect to the polar coordante system centered on the robot.
-            theta = atan( ball.y - self.y, ball.x - self.x ) - self.heading
+            r, theta = toPolar( ball.x - self.x, ball.y - self.y )
+            theta -= self.heading
             
             #Make sure theta is between -pi and pi            
             while theta > pi:
@@ -158,13 +163,13 @@ class Ball( Object ):
     def draw( self, screen ):
         color = (255, 0, 0)
         if self.isSighted:
-            color = (255, 200, 0 )
+            color = (255, 255, 0 )
         pygame.draw.circle( screen, color, ( int( PIXELS_PER_INCH * self.x ), int( PIXELS_PER_INCH * self.y ) ), int( PIXELS_PER_INCH * 0.875 ) )
     
 
 S = Simulator()
-S.robot.leftMotorSaturation = 0
-S.robot.rightMotorSaturation = 0
+S.robot.leftMotorSaturation = 1
+S.robot.rightMotorSaturation = -1
 while True:
     S.step()
     S.draw()
