@@ -138,7 +138,8 @@ class ArduinoWrapper():
     def getBumpSensorHit(self, bumpNum):
         return self.bumpSensors[bumpNum].hit()
     def setMotorSpeed(self, motorNum, speed):
-        self.motors[motorNum].setVal(speed)
+        speed *= 126
+        self.motors[motorNum].setVal(int(speed))
     def setServoAngle(self, servoNum, angle):
         self.servos[servoNum].setAngle(angle)
 

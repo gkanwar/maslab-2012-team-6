@@ -21,7 +21,7 @@ def blarghProcess(blargh, masterConn, inPipes, outPipes, async):
     def sendOut(output):
         for pipe in outPipes:
             pipe.send(output)
-        for pip in outPipes:
+        for pipe in outPipes:
             pipe.recv()
 
     # Main polling loop

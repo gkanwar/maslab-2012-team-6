@@ -17,14 +17,14 @@ class ControlBlargh(Blargh):
             self.goal = goal
             print "ControlBlargh: Updating my goal!"
         if not self.goal == None:
-            if(abs(self.goal[1])>angleThreshold):
-                pval = anglePID(goal[1])
+            if(abs(self.goal[1])>self.angleThreshold):
+                pval = self.anglePID.update(self.goal[1])
                 print "Setting Motor Speeds to turn!"
                 self.arduinoInterface.setMotorSpeed(0, pval)
                 self.arduinoInterface.setMotorSpeed(1, -pval)
-            elif(abs(self.goal[0])>driveThreshold):
+            elif(abs(self.goal[0])>self.driveThreshold):
                 print "Setting Motor Speeds to drive!"
-                pval = drivePID(goal[0])
+                pval = self.drivePID.update(self.goal[0])
                 self.arduinoInterface.setMotorSpeed(0, pval)
                 self.arduinoInterface.setMotorSpeed(1, pval)
         else:
@@ -45,12 +45,12 @@ class PID:
     def update(self, stpt):
         currTime = time.time()
         self.linErr = stpt
-        self.divErr = (lastval - stpt) / (currTime - self.prevTime)
+        self.divErr = (self.lastVal - stpt) / (currTime - self.prevTime)
         self.lastval = stpt
         self.sumErr += stpt * (currTime - self.prevTime)
-        self.intErr = sumErr / (currTime - self.startTime)
+        self.intErr = self.sumErr / (currTime - self.startTime)
         self.prevTime = currTime 
-        pval = P*linErr + I*intErr + D*divErr
+        pval = self.P*self.linErr + self.I*self.intErr + self.D*self.divErr
         if(pval>=1):  
             pval = 1
         if(pval<=-1):
