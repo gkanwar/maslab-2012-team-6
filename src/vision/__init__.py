@@ -8,12 +8,12 @@ class VisionBlargh(Blargh):
         self.vision = Vision()
 
     def step(self, inp):
-        # TODO: Handle more than one ball; handle walls
+        # TODO: Handle walls
         # Update the frame
-        self.vision.bar()
+        self.vision.processBalls()
         # If there is more than 0 balls, then return the location of the first
         # ball-blob
-        if (self.vision.getNumBalls() > 0):
-            return (self.vision.getR(0), self.vision.getTheta(0))
-        else:
-            return None
+        ballList = []
+        for i in range(self.vision.getNumBalls()):
+            ballList.append((self.vision.getR(i), self.vision.getTheta(i)))
+        return ballList
