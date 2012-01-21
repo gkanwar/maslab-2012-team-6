@@ -6,15 +6,18 @@
 #include <highgui.h>
 #include <deque>
 #include <pthread.h>
+#include <vector>
 
 using namespace std;
 
-#define CAMERA_NUM 0
+#define CAMERA_NUM 1
 #define NUM_FRAMES_TO_AVERAGE 2
 
 #define RED_DISPARITY 100
 #define RED_THRESHOLD 60
 #define ECCENTRICITY_THRESHOLD 0.1
+
+#define FOV .907
 
 #define IMG_WIDTH 640
 #define IMG_HEIGHT 480
@@ -22,7 +25,6 @@ using namespace std;
 float eccentricity(int w, int h)
 {
     float output = abs(float(h-w)/float(h+w));
-    cout << "Ecc " << output << endl;
     return output;
 }
 
@@ -45,25 +47,34 @@ void* frameCaptureThread(void* ptr)
     }
 }
 
+class Ball
+{
+    public:
+        float r, theta;
 
+        Ball(float tempR, float tempTheta)
+        {
+            r = tempR;
+            theta = tempTheta;
+        }
+};
 
 class ImageProcessing
 {
     public:
-        // Create some class variables
+        // Declare images
         IplImage* hsvImage;
         IplImage* normalized;
         IplImage* ballImage;
         IplImage* contourImage;
         IplImage* contourImage3C;
         IplImage* ellipseImage;
+        // Declare storages
         CvMemStorage* contourStorage;
         CvMemStorage* houghStorage;
         CvMemStorage* pointStorage;
-
-        int numFrameCountdown;
-
-        deque<IplImage*> pastFrames;
+        // Declare a vector of balls
+        vector<Ball> balls;
 
         ImageProcessing()
         {
@@ -218,9 +229,11 @@ class ImageProcessing
 
             // Process contours with fit ellipse
             int width, height, numPoints;
+            float avgCircleR; // Should be D, but whatever
             cvZero(ellipseImage);
             cvZero(contourImage);
             CvBox2D ellipseBound;
+            balls.clear();
             for (CvSeq* contour = contours; contour != 0; contour = contour->h_next)
             {
                 CvSeq* listOfPoints = cvCreateSeq(CV_SEQ_ELTYPE_POINT, sizeof(CvSeq), sizeof(CvPoint), pointStorage);
@@ -237,10 +250,11 @@ class ImageProcessing
                 if (eccentricity(ellipseBound.size.width, ellipseBound.size.height) <= ECCENTRICITY_THRESHOLD)
                 {
                     cvEllipse(ellipseImage, cvPoint(ellipseBound.center.x, ellipseBound.center.y), cvSize(ellipseBound.size.width/2, ellipseBound.size.height/2), -ellipseBound.angle, 0, 360, CV_RGB(0, 0xff, 0));
+                    avgCircleR = (ellipseBound.size.width + ellipseBound.size.height)/2;
+                    balls.push_back(Ball(1000/avgCircleR, ((ellipseBound.center.x/contourImage->width) - 0.5) * FOV));
                 }
                 else
                 {
-                    cout << "Ecc ellipse" << endl;
                     cvDrawContours(contourImage, contour, CV_RGB(0xff, 0xff, 0xff), CV_RGB(0x99, 0x99, 0x99), -1);
                 }
             }
@@ -262,14 +276,45 @@ class ImageProcessing
             // break
             cvWaitKey(10);
         }
+        int getNumBalls()
+        {
+            return balls.size();
+        }
+        float getR(int index)
+        {
+            return balls[index].r;
+        }
+        float getTheta(int index)
+        {
+            return balls[index].theta;
+        }
 };
 
 extern "C"
 {
-    ImageProcessing* createObj() { return new ImageProcessing(); }
-    void processBalls(ImageProcessing* ip) { ip->processBalls(); }
-    //int ImageProcessing_getR(ImageProcessing* ip,int index){ ip->getR(index); }
-    //int ImageProcessing_getTheta(ImageProcessing * ip,int index){ ip->getTheta(index); }
-    //int ImageProcessing_getNumBalls( ImageProcessing* ip){ip->getNumBalls();}
+    ImageProcessing* createObj()
+    {
+        return new ImageProcessing();
+    }
+    void deleteObj(ImageProcessing* ip)
+    {
+        delete ip;
+    }
+    void processBalls(ImageProcessing* ip)
+    {
+        ip->processBalls();
+    }
+    int getNumBalls(ImageProcessing* ip)
+    {
+        return ip->getNumBalls();
+    }
+    float getR(ImageProcessing* ip, int index)
+    {
+        return ip->getR(index);
+    }
+    float getTheta(ImageProcessing* ip, int index)
+    {
+        return ip->getTheta(index);
+    }
 }
 
