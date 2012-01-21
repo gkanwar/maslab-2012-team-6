@@ -39,7 +39,7 @@ if __name__ == "__main__":
     so it will wait for actual inputs coming in through the pipe to
     step b3.
     '''
-
+True
     #Create the structure for checkpoint 4.
     vision = BlarghProcessStarter( VisionBlargh(), True )
     world = BlarghProcessStarter( WorldBlargh(), True) #Async for Odometry purposes.
