@@ -41,8 +41,8 @@ if __name__ == "__main__":
 
     #Create the structure for checkpoint 4.
     #vision = BlarghProcessStarter( VisionBlargh(), True )
-    world = BlarghProcessStarter( WorldBlargh(), False) #Async for Odometry purposes.
-    behavior = BlarghProcessStarter( BehaviorBlargh(), False) #Async because this has timeouts, etc.
+    world = BlarghProcessStarter( WorldBlargh(), True) #Async for Odometry purposes.
+    behavior = BlarghProcessStarter( BehaviorBlargh(), True) #Async because this has timeouts, etc.
     control = BlarghProcessStarter( ControlBlargh( FakeInterface() ), True )
 
     #cascadeBlarghProcesses(vision, world)
