@@ -5,8 +5,8 @@ class ControlBlargh(Blargh):
     
     def __init__(self, arduinoInterface):
         self.arduinoInterface = arduinoInterface
-        self.angleThreshold = .2
-        self.driveThreshold = .3
+        self.angleThreshold = .001
+        self.driveThreshold = .001
         self.anglePID = PID((.2,0,0))
         self.drivePID = PID((.3,0,0))
         self.goal = None
@@ -17,12 +17,16 @@ class ControlBlargh(Blargh):
         if not self.goal == None:
             if(abs(self.goal[1])>angleThreshold):
                 pval = anglePID(goal[1])
+                print "Setting Motor Speeds to turn!"
                 self.arduinoInterface.setMotorSpeed(0, pval)
                 self.arduinoInterface.setMotorSpeed(1, -pval)
-            if(abs(self.goal[0])>driveThreshold):
+            elif(abs(self.goal[0])>driveThreshold):
+                print "Setting Motor Speeds to drive!"
                 pval = drivePID(goal[0])
                 self.arduinoInterface.setMotorSpeed(0, pval)
                 self.arduinoInterface.setMotorSpeed(1, pval)
+        else:
+            print "My world is a void of nothingness
 
 
 class PID:

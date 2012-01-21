@@ -163,6 +163,8 @@ class World:
 #For now, this is pretty sparse. Just pass on data.
 class WorldBlargh( Blargh ):
     def step( self, balls ):
+        if balls == None:
+            return None
         world = World( balls, False)
         return world
     

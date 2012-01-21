@@ -160,7 +160,7 @@ class BehaviorBlargh(Blargh):
 	    #If the Blargh has been passed a new version of the world to deal with feed it in.
         if not new_world == None:
 		    world = new_world
-        #Act on the model of the world if we have one. Otherwise, return none.
+        #Act on the model of the world if we have one. Otherwise, return None.
         if not world == None:
             self.StateMachine.step( time.time() )
             #TODO: The following code should be part of control in the short run, path planning in the longer run.
