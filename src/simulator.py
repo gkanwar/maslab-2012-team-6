@@ -12,13 +12,17 @@ def toPolar( x, y ):
     angle = 0
     if not x == 0:
         angle = math.atan( y / x )
+    if (x == 0 and y > 0):
+        angle = pi / 2
+    if (x == 0 and y < 0):
+        angle = -pi / 2
     if x < 0:
-        angle = -1 * angle
+        angle = pi + angle
     while angle > 2 * pi:
         angle += -2 * pi
     while angle < 0:
         angle += 2 * pi
-    print ( x, y ),"goes to",( r, angle )
+    #print ( x, y ),"goes to",( r, angle )
     return ( r, angle )
 
 #Because the simulator measures things in inches, and inches are pretty big unit,
@@ -136,8 +140,8 @@ class Robot( Object ):
         self.sightedBalls = [] #Clear out the sighted balls
         for ball in balls:
             #Find the theta of the of the ball with respect to the polar coordante system centered on the robot.
-            r, theta = toPolar( ball.x - self.x, ball.y - self.y )
-            theta -= self.heading
+            r, theta = toPolar( ball.y - self.y, ball.x - self.x )
+            theta = self.heading - theta
             
             #Make sure theta is between -pi and pi            
             while theta > pi:
@@ -166,10 +170,10 @@ class Ball( Object ):
             color = (255, 255, 0 )
         pygame.draw.circle( screen, color, ( int( PIXELS_PER_INCH * self.x ), int( PIXELS_PER_INCH * self.y ) ), int( PIXELS_PER_INCH * 0.875 ) )
     
-
-S = Simulator()
-S.robot.leftMotorSaturation = 1
-S.robot.rightMotorSaturation = -1
-while True:
-    S.step()
-    S.draw()
+if __name__ == "__main__":
+    S = Simulator()
+    S.robot.leftMotorSaturation = 1
+    S.robot.rightMotorSaturation = 0.3
+    while True:
+        S.step()
+        S.draw()
