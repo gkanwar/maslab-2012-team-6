@@ -9,17 +9,21 @@ from world import WorldBlargh
 from behavior import BehaviorBlargh
 from control import ControlBlargh
 
-from arduino import createArduinoInterface, ArduinoInterfaceInputWrapper, ArduinoInterfaceOutputWrapper
+#from arduino import createArduinoInterface, ArduinoInterfaceInputWrapper, ArduinoInterfaceOutputWrapper
 
 # This is the master process, it should control everything. It's also
 # what should get called to run this whole thing.
 
+class FakeInterface:
+    def setMotorSpeed( motor_num, speed ):
+        print "Motor", motor_num, "set to speed", speed
+
 if __name__ == "__main__":
 
     # Create the arduino interface
-    masterConn, inputConn, outputConn = createArduinoInterface()
-    arduinoInterfaceInputWrapper = ArduinoInterfaceInputWrapper(inputConn)
-    arduinoInterfaceOutputWrapper = ArduinoInterfaceOutputWrapper(outputConn)
+    #masterConn, inputConn, outputConn = createArduinoInterface()
+    #arduinoInterfaceInputWrapper = ArduinoInterfaceInputWrapper(inputConn)
+    #arduinoInterfaceOutputWrapper = ArduinoInterfaceOutputWrapper(outputConn)
     '''
     Example for creating blargh structure:
     b1 = ExampleBlargh1()
@@ -39,7 +43,7 @@ if __name__ == "__main__":
     vision = BlarghProcessStarter( VisionBlargh(), True )
     world = BlarghProcessStarter( WorldBlargh(), False) #Async for Odometry purposes.
     behavior = BlarghProcessStarter( BehaviorBlarg(), False) #Async because this has timeouts, etc.
-    control = BlarghProcessStarter( ControlBlarg( arduinoInterfaceOutputWrapper ), True )
+    control = BlarghProcessStarter( ControlBlarg( FakeInterface() ), True )
 
     cascadeBlarghProcesses(vision, world)
     cascadeBlarghProcesses(world, behavior)
