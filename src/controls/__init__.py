@@ -15,11 +15,11 @@ class ControlBlargh(Blargh):
         if not goal == None:
             self.goal = goal
         if not self.goal == None:
-            if(self.goal[1]>angleThreshold):
+            if(abs(self.goal[1])>angleThreshold):
                 pval = anglePID(goal[1])
                 self.arduinoInterface.setMotorSpeed(0, pval)
                 self.arduinoInterface.setMotorSpeed(1, -pval)
-            if(self.goal[0]>driveThreshold):
+            if(abs(self.goal[0])>driveThreshold):
                 pval = drivePID(goal[0])
                 self.arduinoInterface.setMotorSpeed(0, pval)
                 self.arduinoInterface.setMotorSpeed(1, pval)
