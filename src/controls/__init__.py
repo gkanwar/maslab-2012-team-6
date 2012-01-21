@@ -42,4 +42,9 @@ class PID:
         self.sumErr += stpt * (currTime - self.prevTime)
         self.intErr = sumErr / (currTime - self.startTime)
         self.prevTime = currTime 
-        return P*linErr + I*intErr + D*divErr
+        pval = P*linErr + I*intErr + D*divErr
+        if(pval>=1):  
+            pval = 1
+        if(pval<=-1):
+            pval = -1
+        return pval
