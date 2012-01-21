@@ -16,21 +16,23 @@ from simulator import *
 if __name__ == "__main__":
     #Create the simulator
     simulator = Simulator()
-    robot = simulator.robot
+    robotOutputInterface = simulator.robot
 
     #Create the structure for checkpoint 4.
-    vision = BlarghProcessStarter( VisionBlargh( simulator ), True )
-    world = BlarghProcessStarter( WorldBlargh(), True) #Async for Odometry purposes.
-    behavior = BlarghProcessStarter( BehaviorBlargh(), True) #Async because this has timeouts, etc.
-    control = BlarghProcessStarter( ControlBlargh( robot ), True )
+    vision = BlarghProcessStarter( VisionBlargh, [ simulator ], True )
+    world = BlarghProcessStarter( WorldBlargh, (), True) #Async for Odometry purposes.
+    behavior = BlarghProcessStarter( BehaviorBlargh, (), True) #Async because this has timeouts, etc.
+    control = BlarghProcessStarter( ControlBlargh, [ robotOutputInterface ], True )
+
+    simulator = BlarghProcessStarter( SimulatorBlargh, [ simulator ], True )
 
     cascadeBlarghProcesses(vision, world)
     cascadeBlarghProcesses(world, behavior)
     cascadeBlarghProcesses(behavior, control)
 
     #Start Everything, and store it in a list.
-    processes = [ vision.start(), world.start(), behavior.start(), control.start() ]
-
+    processes = [ vision.start(), world.start(), behavior.start(), control.start(), simulator.start() ]
+    quit()
     while True:
         simulator.step()
         simulator.draw()

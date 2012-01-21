@@ -27,7 +27,7 @@ class Simulator:
         self.ySize = 100
 
         self.robot = Robot( ( self.xSize / 2 , self.ySize / 2 ) )
-        self.balls = [ Ball( ( random.randint( 0, self.xSize ), random.randint( 0, self.ySize ) ), self.robot ) for i in range( 5 ) ]
+        self.balls = [ Ball( ( random.randint( 0, self.xSize ), random.randint( 0, self.ySize ) ), self.robot ) for i in range( 50 ) ]
         
         self.objects = []
         self.objects.extend( self.balls  )
@@ -38,7 +38,7 @@ class Simulator:
         self.screen = pygame.display.set_mode( ( PIXELS_PER_INCH * self.xSize, PIXELS_PER_INCH * self.ySize ) )
 
     def draw(self):
-        #Draw
+        print "Drawing shit"
         # Clear the screen
         self.screen.fill( (0, 0, 0) )
 
@@ -51,8 +51,9 @@ class Simulator:
 
     def step( self ):
         #Step all the objects...
-        for obj in self.objects:
-            obj.step()
+        for ball in self.balls:
+            ball.step()
+        robot.step()
         self.robot.detectBalls( self.balls )
 
 class Object:
@@ -97,7 +98,7 @@ class Robot( Object ):
     def step( self ):
         currentTime = time.time()
         delTime = currentTime - self.lastTime
-
+        print "Stepping robot. Motors are at",( self.leftMotorSaturation + self.rightMotorSaturation )
         #I'm assuming this function gets called pretty often, so I can decouple the motions.
         avgSpeed = self.maxMotorSpeed * ( self.leftMotorSaturation + self.rightMotorSaturation ) / 2
         self.x += delTime * avgSpeed * sin( self.heading )
@@ -117,6 +118,7 @@ class Robot( Object ):
         pygame.draw.line( screen, (0, 255, 0), ( int( PIXELS_PER_INCH * self.x ), int( PIXELS_PER_INCH * self.y ) ), ( int( PIXELS_PER_INCH * ( self.x + ( self.radius * sin( self.heading ) ) ) ), int( PIXELS_PER_INCH * ( self.y + ( self.radius * cos( self.heading ) ) ) ) ) )
 
     def setMotorSpeed( self, motorNum, speed ):
+        print "Setting motor",motorNum,"to",speed
         if motorNum == 0:
             self.leftMotorSaturation = speed
         elif motorNum == 1:
@@ -142,6 +144,7 @@ class Robot( Object ):
                 ball.isSighted = True
             else:
                 ball.isSighted = False
+        return self.sightedBalls
 
 class Ball( Object ):
     def __init__( self, position, robot ):
@@ -165,7 +168,18 @@ class VisionBlargh(Blargh):
         self.simulator = simulator
 
     def step(self, inp):
-       return self.simulator.robot.detectBalls( simulator.balls )
+        balls = self.simulator.robot.detectBalls( self.simulator.balls )
+        print "Vision: Balls seen are at", balls
+        return balls
+
+class SimulatorBlargh(Blargh):
+    def __init__(self, simulator):
+        self.simulator = simulator
+
+    def step(self, inp):
+        self.simulator.step()
+        self.simulator.draw()
+        return None
 
 if __name__ == "__main__":
     S = Simulator()
