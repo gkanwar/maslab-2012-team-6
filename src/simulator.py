@@ -138,7 +138,7 @@ class Robot( Object ):
 
             #If the camera is pointing close to the ball, we see it!
             if abs( theta ) < self.maxSightingAngle:
-                self.sightedBalls.append( ball )
+                self.sightedBalls.append( (r, theta) )
                 ball.isSighted = True
             else:
                 ball.isSighted = False
@@ -157,6 +157,16 @@ class Ball( Object ):
             color = (255, 255, 0 )
         pygame.draw.circle( screen, color, ( int( PIXELS_PER_INCH * self.x ), int( PIXELS_PER_INCH * self.y ) ), int( PIXELS_PER_INCH * 0.875 ) )
     
+from blargh import Blargh
+
+#Fake blargh to wrap the simulator in the Blargh.
+class VisionBlargh(Blargh):
+    def __init__(self, simulator):
+        self.simulator = simulator
+
+    def step(self, inp):
+       return self.simulator.robot.detectBalls( simulator.balls )
+
 if __name__ == "__main__":
     S = Simulator()
     S.robot.leftMotorSaturation = 1
