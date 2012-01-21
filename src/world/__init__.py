@@ -162,8 +162,8 @@ class World:
 #This Blargh takes input from the sensors and vision and aggregates it into a model of the world.
 #For now, this is pretty sparse. Just pass on data.
 class WorldBlargh( Blargh ):
-    def step( self, inp ):
-        world = World( [], False)
+    def step( self, balls ):
+        world = World( balls, False)
         return world
     
 # Testing code
