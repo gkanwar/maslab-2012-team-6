@@ -26,7 +26,7 @@ class ControlBlargh(Blargh):
                 self.arduinoInterface.setMotorSpeed(0, pval)
                 self.arduinoInterface.setMotorSpeed(1, pval)
         else:
-            print "My world is a void of nothingness
+            print "My world is a void of nothingness"
 
 
 class PID:
