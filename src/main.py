@@ -4,22 +4,26 @@ sys.path.append("../lib")
 import time
 
 from blargh.blargh_process import BlarghProcessStarter, cascadeBlarghProcesses, killAllBlarghProcesses
-from vision import VisionBlargh
+#from vision import VisionBlargh
 from world import WorldBlargh
 from behavior import BehaviorBlargh
-from control import ControlBlargh
+from controls import ControlBlargh
 
-from arduino import createArduinoInterface, ArduinoInterfaceInputWrapper, ArduinoInterfaceOutputWrapper
+#from arduino import createArduinoInterface, ArduinoInterfaceInputWrapper, ArduinoInterfaceOutputWrapper
 
 # This is the master process, it should control everything. It's also
 # what should get called to run this whole thing.
 
+class FakeInterface:
+    def setMotorSpeed( motor_num, speed ):
+        print "Motor", motor_num, "set to speed", speed
+
 if __name__ == "__main__":
 
     # Create the arduino interface
-    masterConn, inputConn, outputConn = createArduinoInterface()
-    arduinoInterfaceInputWrapper = ArduinoInterfaceInputWrapper(inputConn)
-    arduinoInterfaceOutputWrapper = ArduinoInterfaceOutputWrapper(outputConn)
+    #masterConn, inputConn, outputConn = createArduinoInterface()
+    #arduinoInterfaceInputWrapper = ArduinoInterfaceInputWrapper(inputConn)
+    #arduinoInterfaceOutputWrapper = ArduinoInterfaceOutputWrapper(outputConn)
     '''
     Example for creating blargh structure:
     b1 = ExampleBlargh1()
@@ -36,17 +40,17 @@ if __name__ == "__main__":
     '''
 
     #Create the structure for checkpoint 4.
-    vision = BlarghProcessStarter( VisionBlargh(), True )
-    world = BlarghProcessStarter( WorldBlargh(), False) #Async for Odometry purposes.
-    behavior = BlarghProcessStarter( BehaviorBlarg(), False) #Async because this has timeouts, etc.
-    control = BlarghProcessStarter( ControlBlarg( arduinoInterfaceOutputWrapper ), True )
+    #vision = BlarghProcessStarter( VisionBlargh(), True )
+    world = BlarghProcessStarter( WorldBlargh(), True) #Async for Odometry purposes.
+    behavior = BlarghProcessStarter( BehaviorBlargh(), True) #Async because this has timeouts, etc.
+    control = BlarghProcessStarter( ControlBlargh( FakeInterface() ), True )
 
-    cascadeBlarghProcesses(vision, world)
+    #cascadeBlarghProcesses(vision, world)
     cascadeBlarghProcesses(world, behavior)
     cascadeBlarghProcesses(behavior, control)
 
     #Start Everything, and store it in a list.
-    processes = [ vision.start(), world.start(), behavior.start(), control.start() ]
+    processes = [ world.start(), behavior.start(), control.start() ]
 
     # TODO: Main timer loop, kill all processes when time runs out
     startTime = time.time()

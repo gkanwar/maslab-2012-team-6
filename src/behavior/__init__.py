@@ -156,12 +156,10 @@ class BehaviorBlargh(Blargh):
         self.StateMachine = StateMachine( DriveStraightState( time.time() ) )
 
     def step(self, new_world):
-	    global world
-
+        global world
 	    #If the Blargh has been passed a new version of the world to deal with feed it in.
-	    if not new_world == None:
+        if not new_world == None:
 		    world = new_world
-
         #Act on the model of the world if we have one. Otherwise, return none.
         if not world == None:
             self.StateMachine.step( time.time() )
