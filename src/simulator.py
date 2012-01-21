@@ -3,14 +3,19 @@
 import pygame
 import math
 import time
+import random
 
 PIXELS_PER_INCH = 10
 
 class Simulator:
     def __init__(self):
         # Initialize variables
-        self.robot = Robot( 30, 30 )
-        self.objects = [ self.robot ]
+        #The robot is on it's own for convinence in later access.
+        self.robot = Robot( ( 30, 30 ) )
+        self.objects = []
+        for i in range( 12 ):
+            self.objects.append( Ball( ( random.randint( 0, 60 ), random.randint( 0, 60 ) ) ) )
+        self.objects.append( self.robot )
 
         self.xSize = 60
         self.ySize = 60
@@ -36,19 +41,26 @@ class Simulator:
         for obj in self.objects:
             obj.step()
 
-class Object():
+class Object:
+    '''Basic Object Class.'''
+    def __init__( self, position ):
+        self.x, self.y = position
+
+    def setPosition( self, position ):
+        """ Set the x, y coords of the robot. """
+        self.x, self.y = position
+
     def step( self ):
-        pass
+        raise NotImplementedError
 
     #No invisible objects
     def draw( self, screen ):
         raise NotImplementedError
 
 class Robot( Object ):
-    """ Class to keep track of the robot. """
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
+    """Simulates the physical robot. The robot should be implemented in such a way that it can interface with code in the same way as the Arduino wrapper(s)"""
+    def __init__( self, position ):
+        self.x, self.y = position
 
         self.radius = 7
         
@@ -88,10 +100,12 @@ class Robot( Object ):
         elif motorNum == 1:
             self.rightMotorSaturation = speed
 
-    def setCoords(self, x, y):
-        """ Set the x, y coords of the robot. """
-        self.x = x
-        self.y = y
+class Ball( Object ):
+    def step( self ):
+        pass
+    def draw( self, screen ):
+        pygame.draw.circle( screen, (255, 0, 0), ( int( PIXELS_PER_INCH * self.x ), int( PIXELS_PER_INCH * self.y ) ), int( PIXELS_PER_INCH * 0.875 ) )
+    
 
 S = Simulator()
 S.robot.leftMotorSaturation = 1.0
