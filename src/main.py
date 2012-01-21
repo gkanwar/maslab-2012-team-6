@@ -9,7 +9,7 @@ from world import WorldBlargh
 from behavior import BehaviorBlargh
 from controls import ControlBlargh
 
-#from arduino import createArduinoInterface, ArduinoInterfaceInputWrapper, ArduinoInterfaceOutputWrapper
+from arduino import createArduinoInterface, ArduinoInterfaceInputWrapper, ArduinoInterfaceOutputWrapper
 
 # This is the master process, it should control everything. It's also
 # what should get called to run this whole thing.

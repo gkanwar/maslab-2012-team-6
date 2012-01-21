@@ -1,6 +1,6 @@
 from ctypes import *
 # Load the C++ library
-visionlib = cdll.LoadLibrary('./libvision.so')
+visionlib = cdll.LoadLibrary('./vision/libvision.so')
 # Set the return types
 visionlib.createObj.restype = c_int
 visionlib.processBalls.restype = c_int
