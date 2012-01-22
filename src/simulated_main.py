@@ -24,18 +24,16 @@ if __name__ == "__main__":
     behavior = BlarghProcessStarter( BehaviorBlargh, (), True) #Async because this has timeouts, etc.
     control = BlarghProcessStarter( ControlBlargh, [ robotOutputInterface ], True )
 
-    simulator = BlarghProcessStarter( SimulatorBlargh, [ simulator ], True )
+    sim = BlarghProcessStarter( SimulatorBlargh, [ simulator ], True )
 
     cascadeBlarghProcesses(vision, world)
     cascadeBlarghProcesses(world, behavior)
     cascadeBlarghProcesses(behavior, control)
+    cascadeBlarghProcesses(control, sim)
 
     #Start Everything, and store it in a list.
-    processes = [ vision.start(), world.start(), behavior.start(), control.start(), simulator.start() ]
-    quit()
-    while True:
-        simulator.step()
-        simulator.draw()
+    processes = [ vision.start(), world.start(), behavior.start(), control.start(), sim.start() ]
+
     # TODO: Main timer loop, kill all processes when time runs out
     startTime = time.time()
     while time.time() - startTime < 3 * 60:

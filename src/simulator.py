@@ -38,7 +38,6 @@ class Simulator:
         self.screen = pygame.display.set_mode( ( PIXELS_PER_INCH * self.xSize, PIXELS_PER_INCH * self.ySize ) )
 
     def draw(self):
-        print "Drawing shit"
         # Clear the screen
         self.screen.fill( (0, 0, 0) )
 
@@ -53,7 +52,7 @@ class Simulator:
         #Step all the objects...
         for ball in self.balls:
             ball.step()
-        robot.step()
+        self.robot.step()
         self.robot.detectBalls( self.balls )
 
 class Object:
@@ -85,8 +84,8 @@ class Robot( Object ):
         self.heading = 0
 
         #motor info
-        self.leftMotorSaturation = 0
-        self.rightMotorSaturation = 0
+        self.leftMotorSaturation = 1
+        self.rightMotorSaturation = -1
 
         self.maxMotorSpeed = 20
 
@@ -98,7 +97,7 @@ class Robot( Object ):
     def step( self ):
         currentTime = time.time()
         delTime = currentTime - self.lastTime
-        print "Stepping robot. Motors are at",( self.leftMotorSaturation + self.rightMotorSaturation )
+        print "Stepping Robot",self,": Motors are at",( self.leftMotorSaturation, self.rightMotorSaturation )
         #I'm assuming this function gets called pretty often, so I can decouple the motions.
         avgSpeed = self.maxMotorSpeed * ( self.leftMotorSaturation + self.rightMotorSaturation ) / 2
         self.x += delTime * avgSpeed * sin( self.heading )
@@ -118,11 +117,11 @@ class Robot( Object ):
         pygame.draw.line( screen, (0, 255, 0), ( int( PIXELS_PER_INCH * self.x ), int( PIXELS_PER_INCH * self.y ) ), ( int( PIXELS_PER_INCH * ( self.x + ( self.radius * sin( self.heading ) ) ) ), int( PIXELS_PER_INCH * ( self.y + ( self.radius * cos( self.heading ) ) ) ) ) )
 
     def setMotorSpeed( self, motorNum, speed ):
-        print "Setting motor",motorNum,"to",speed
         if motorNum == 0:
             self.leftMotorSaturation = speed
         elif motorNum == 1:
             self.rightMotorSaturation = speed
+        print "Robot",self,": Motors are now at",( self.leftMotorSaturation, self.rightMotorSaturation )
 
     #Takes a list of all the balls in the arena, and determines which the robot can see.
     def detectBalls( self, balls ):
@@ -169,7 +168,6 @@ class VisionBlargh(Blargh):
 
     def step(self, inp):
         balls = self.simulator.robot.detectBalls( self.simulator.balls )
-        print "Vision: Balls seen are at", balls
         return balls
 
 class SimulatorBlargh(Blargh):
@@ -183,8 +181,9 @@ class SimulatorBlargh(Blargh):
 
 if __name__ == "__main__":
     S = Simulator()
-    S.robot.leftMotorSaturation = 1
-    S.robot.rightMotorSaturation = 0.3
+    robot = S.robot
+    robot.leftMotorSaturation = 1
+    robot.rightMotorSaturation = 0.3
     while True:
         S.step()
         S.draw()

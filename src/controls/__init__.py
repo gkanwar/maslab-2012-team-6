@@ -5,32 +5,24 @@ class ControlBlargh(Blargh):
     
     def __init__(self, arduinoInterface):
         self.arduinoInterface = arduinoInterface
-        self.angleThreshold = .001
-        self.driveThreshold = .001
+        self.angleThreshold = .2
+        self.driveThreshold = .3
         self.anglePID = PID((.2,0,0))
         self.drivePID = PID((.3,0,0))
         self.goal = None
     
     def step(self, goal):
-        print "ControlBlargh: Receiving",goal
         if not goal == None:
             self.goal = goal
-            print "ControlBlargh: Updating my goal!"
         if not self.goal == None:
             if(abs(self.goal[1])>self.angleThreshold):
                 pval = self.anglePID.update(self.goal[1])
-                pval = 1
-                print "Setting Motor Speeds to turn!"
                 self.arduinoInterface.setMotorSpeed(0, pval)
                 self.arduinoInterface.setMotorSpeed(1, -pval)
             elif(abs(self.goal[0])>self.driveThreshold):
-                print "Setting Motor Speeds to drive!"
                 pval = self.drivePID.update(self.goal[0])
-                pval = 1
                 self.arduinoInterface.setMotorSpeed(0, pval)
                 self.arduinoInterface.setMotorSpeed(1, pval)
-        else:
-            print "My world is a void of nothingness"
 
 
 class PID:
