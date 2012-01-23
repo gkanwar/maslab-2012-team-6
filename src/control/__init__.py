@@ -10,20 +10,18 @@ class ControlBlargh(Blargh):
         self.arduinoInterface = arduinoInterface
         self.angleThreshold = pi / 12
         self.driveThreshold = .3
-<<<<<<< HEAD
-        self.anglePID = PID((.2,0,0))
-        self.drivePID = PID((.6,0,0))
-=======
+
         self.anglePID = PID((20,20,0))
         self.drivePID = PID((.15,0,0))
->>>>>>> e2ba873f071d1e08af55f80302b711311896057f
+
         self.goal = None
     
     def step(self, goal):
         if not goal == None:
             self.goal = goal
         if self.goal == STATE_CHANGE_FLAG:
-            anglePID.clearSumErr()
+            self.anglePID.clearSumErr()
+            print "Change State"
         elif not self.goal == None:
             r, theta = self.goal
             # Make sure theta is between -pi and pi to avoid spinning in circles.
