@@ -83,6 +83,22 @@ class Object:
     def draw(self, screen):
         raise NotImplementedError
 
+#Encapsulates Camera functionality for nice code later
+class Camera:
+    def __init__( self, maxSightingAngle, minSightingDistance ):
+        self.maxSightingAngle = maxSightingAngle
+        self.minSightingDistance = minSightingDistance
+    # Takes an ( r, theta ) position and returns true if that position can be seen by the camera.
+    def canSeePosition( self, position ):
+        r, theta = position
+        # Make sure theta is between -pi and pi
+        while theta > pi:
+            theta += -2 * pi
+        while theta < -1 * pi:
+            theta += 2 * pi
+        # Returns True if the position is in the vision cone.
+        return ( abs(theta) < self.maxSightingAngle and r > self.minSightingDistance )
+
 class Robot(Object):
     """
     Simulates the physical robot. The robot should be implemented in such a
@@ -102,12 +118,13 @@ class Robot(Object):
 
         # Set the maximum motor speed
         self.maxMotorSpeed = 20
+
         # Set initial motor saturations
         self.leftMotorSaturation = 0
         self.rightMotorSaturation = 0
 
         # Sensor data
-        self.maxSightingAngle = CAMERA_MAX_SIGHTING_ANGLE
+        self.camera = Camera( CAMERA_MAX_SIGHTING_ANGLE, CAMERA_MIN_SIGHTING_DISTANCE )
         self.sightedBalls = []
 
     # Update the Robot's position
@@ -176,18 +193,12 @@ class Robot(Object):
             r, theta = toPolar(ball.y - self.y, ball.x - self.x)
             theta = self.heading - theta
             
-            # Make sure theta is between -pi and pi
-            while theta > pi:
-                theta += -2 * pi
-            while theta < -1 * pi:
-                theta += 2 * pi
-
             # If
-            # (a) the camera is pointing close to the ball
+            # (a) the camera is pointing at the ball
             # (b) the ball hasn't been picked up yet.
             # Then we see it!
-            if abs(theta) < self.maxSightingAngle and not ball.isAquired:
-                self.sightedBalls.append((r, theta))
+            if self.camera.canSeePosition( ( r, theta ) ) and not ball.isAquired:
+                self.sightedBalls.append( ( r, theta ) )
                 ball.isSighted = True
             else:
                 ball.isSighted = False
