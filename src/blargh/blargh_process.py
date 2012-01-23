@@ -33,7 +33,7 @@ def blarghProcess(BlarghClass, args, masterConn, inPipes, outPipes, async):
         # Poll the master pipe
         if (masterConn.poll()):
             # If there was something, receive it
-            cmd = pipe.recv()
+            cmd, arg = pipe.recv()
             # Process the command
             if (cmd == "KILL"):
                 return 0
