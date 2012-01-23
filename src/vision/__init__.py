@@ -16,4 +16,5 @@ class VisionBlargh(Blargh):
         ballList = []
         for i in range(self.vision.getNumBalls()):
             ballList.append((self.vision.getR(i), self.vision.getTheta(i)))
-        return ballList
+        ranIntoWall = self.vision.ranIntoWall()
+        return (ballList, ranIntoWall)

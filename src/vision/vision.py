@@ -25,6 +25,10 @@ class Vision(object):
     # Get the theta for a specific ball found
     def getTheta(self, index):
         return visionlib.getTheta(self.obj, index)
+    # Get whether or not the wall is eating us.
+    def ranIntoWall(self):
+        return visionlib.ranIntoWall()
+
 
 # Example code
 

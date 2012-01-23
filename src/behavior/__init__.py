@@ -13,7 +13,7 @@ class World:
 
 world = World( [], 0, False )
 
-#Behavior-related constants.
+# Behavior-related constants.
 BACKUP_TIME = 2
 TURN_TIME = 2
 BALL_CAPTURE_THRESHOLD = 11
@@ -31,17 +31,18 @@ class EscapeState( State ):
         self.startTime = world.time
     def step( self ):
 
+
         if world. time > 179:
             return DeadState(), ( 0, 0 )
 
         if ( world.time - self.startTime < BACKUP_TIME ):
             goal = ( -1, 0 )
         else:
-            goal = ( 0, pi / 2 )
+            goal = (0, pi / 2)
 
-        #Update the state.
-        #If we hit a wall, stop what we're doing and escape the wall.
-        #This SEEMS redundant, but it keeps us from turning into a situation we can't escape from.
+        # Update the state.
+        # If we hit a wall, stop what we're doing and escape the wall.
+        # This SEEMS redundant, but it keeps us from turning into a situation we can't escape from.
         if world.isWallInFront():
             return EscapeState(), ( 0, 0 )
         #If we've hit the timeout, switch to driving straight.
@@ -63,10 +64,10 @@ class DriveStraightState( State ):
 
         goal = ( 1, 0 )
         
-        #Update the state.
+        # Update the state.
 
-        #If we hit a wall, stop what we're doing and escape the wall.
-        if world.isWallInFront():
+        # If we hit a wall or random chance of 0.0875 chance per second , stop what we're doing and escape the wall.
+        if world.isWallInFront() or random.random < 1 - ( 1 - 0.0875)**(world.time - self.lastTime):
             return EscapeState(), ( 0, 0 )
 
         #If we see a ball...
@@ -77,7 +78,7 @@ class DriveStraightState( State ):
         if random.random() < 1 - ( 1 - 0.50 )**(world.time - self.lastTime):
             return TurnState(), ( 0, 0 )
 
-        #Otherwise, full steam ahead.
+        # Otherwise, full steam ahead.
         else:
             self.lastTime = world.time
             return self, goal
@@ -93,10 +94,11 @@ class TurnState( State ):
             return DeadState(), ( 0, 0 )
 
         goal = ( 0, pi / 2 )
-        
-        #Update the state.
 
-        #If we hit a wall, stop what we're doing and escape the wall.
+        
+        # Update the state.
+
+        # If we hit a wall, stop what we're doing and escape the wall.
         if world.isWallInFront():
             return EscapeState(), ( 0, 0 )
 
@@ -144,7 +146,6 @@ class SeekBallState( State ):
                 return self, closestBall
 
 class AquireBallState( State ):
-
     def __init__( self ):
         self.startTime = world.time
 
@@ -154,6 +155,7 @@ class AquireBallState( State ):
             return DeadState(), ( 0, 0 )
 
         goal = ( 1, 0 )
+
         
         #Update the state.
 
@@ -178,11 +180,12 @@ class StateMachine:
 
     def __init__( self, firstState ):
         self.state = firstState
-        self.goal = ( 0, 0 )
+        self.goal = (0, 0)
 
     def step( self ):
         print "State:",self.state
         self.state, self.goal = self.state.step()
+
         
 # Takes in the state of the world and puts out some behavior based on
 # previous state (BehaviorBlargh is also a state machine :P)
@@ -194,10 +197,10 @@ class BehaviorBlargh(Blargh):
 
     def step(self, new_world):
         global world
-	    #If the Blargh has been passed a new version of the world to deal with feed it in.
+	    # If the Blargh has been passed a new version of the world to deal with feed it in.
         if not new_world == None:
 		    world = new_world
-        #Act on the model of the world if we have one. Otherwise, return None.
+        # Act on the model of the world if we have one. Otherwise, return None.
         if not world == None:
             self.StateMachine.step()
             return self.StateMachine.goal
