@@ -16,7 +16,7 @@ world = World( [], 0, False )
 #Behavior-related constants.
 BACKUP_TIME = 2
 TURN_TIME = 2
-BALL_CAPTURE_THRESHOLD = 9
+BALL_CAPTURE_THRESHOLD = 11
 THETA_THRESHOLD = pi / 6
 AQUIRE_TIME = 2
 

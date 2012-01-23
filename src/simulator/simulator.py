@@ -84,7 +84,7 @@ class Object:
         raise NotImplementedError
 
 #Encapsulates Camera functionality for nice code later
-class Camera:
+class Camera():
     def __init__( self, maxSightingAngle, minSightingDistance ):
         self.maxSightingAngle = maxSightingAngle
         self.minSightingDistance = minSightingDistance

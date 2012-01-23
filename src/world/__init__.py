@@ -5,7 +5,6 @@ import time
 class World:
     def __init__( self, balls, time, wallInFront ):
         self.balls = balls
-        print time
         self.time = time
         self.wallInFront = wallInFront
     def isWallInFront( self ):

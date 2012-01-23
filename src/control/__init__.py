@@ -6,7 +6,7 @@ class ControlBlargh(Blargh):
     
     def __init__(self, arduinoInterface):
         self.arduinoInterface = arduinoInterface
-        self.angleThreshold = .1
+        self.angleThreshold = pi / 12
         self.driveThreshold = .3
         self.anglePID = PID((.2,0,0))
         self.drivePID = PID((.3,0,0))
@@ -30,7 +30,9 @@ class ControlBlargh(Blargh):
                 pval = self.drivePID.update(r)
                 self.arduinoInterface.setMotorSpeed(0, pval)
                 self.arduinoInterface.setMotorSpeed(1, pval)
-
+            else:
+                self.arduinoInterface.setMotorSpeed(0, 0)
+                self.arduinoInterface.setMotorSpeed(1, 0)
 
 class PID:
 
