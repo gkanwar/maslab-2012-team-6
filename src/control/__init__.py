@@ -2,6 +2,8 @@ from blargh import Blargh
 from math import pi
 import time
 
+STATE_CHANGE_FLAG = 0
+
 class ControlBlargh(Blargh):
     
     def __init__(self, arduinoInterface):
@@ -15,11 +17,9 @@ class ControlBlargh(Blargh):
     def step(self, goal):
         if not goal == None:
             self.goal = goal
-        if not self.goal == None:
-            if self.goal == (1,0):
-                self.anglePID = PID((5,0,0))
-            else:
-                self.anglePID = PID((20,20,0))
+        if self.goal == STATE_CHANGE_FLAG:
+            anglePID.clearSumErr()
+        elif not self.goal == None:
             r, theta = self.goal
             # Make sure theta is between -pi and pi to avoid spinning in circles.
             while theta > pi:
@@ -80,3 +80,7 @@ class PID:
         if(pval<=-1):
             pval = -1'''
         return pval
+
+    def clearSumErr( self ):
+        self.sumErr = 0
+        self.startTime = time.time()

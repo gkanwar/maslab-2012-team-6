@@ -3,13 +3,12 @@ import time
 
 #This object will be passed on to the BehaviorBlargh. It describes the state of the world around the robot.
 class World:
-    def __init__( self, balls, time, wallInFront ):
+    def __init__( self, balls, hitWall, time, wallInFront ):
         self.balls = balls
-        print time
         self.time = time
-        self.wallInFront = wallInFront
+        self.hitWall = hitWall
     def isWallInFront( self ):
-        return self.wallInFront
+        return self.hitWall
         
 
 #This Blargh takes input from the sensors and vision and aggregates it into a model of the world.
@@ -17,8 +16,9 @@ class World:
 class WorldBlargh( Blargh ):
     def __init__( self ):
         self.startTime = time.time()
-    def step( self, balls ):
+    def step( self, inp ):
+        balls, hitWall = inp
         if balls == None:
             return None
-        world = World( balls, time.time() - self.startTime, False)
+        world = World( balls, hitWall, time.time() - self.startTime, False)
         return world
