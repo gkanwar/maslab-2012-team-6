@@ -1,6 +1,7 @@
 from ctypes import *
 # Load the C++ library
-visionlib = cdll.LoadLibrary('./vision/libvision.so')
+import os
+visionlib = cdll.LoadLibrary(os.path.dirname(os.path.abspath(__file__)) + '/libvision.so')
 # Set the return types
 visionlib.createObj.restype = c_int
 visionlib.processBalls.restype = c_int
@@ -24,8 +25,13 @@ class Vision(object):
     # Get the theta for a specific ball found
     def getTheta(self, index):
         return visionlib.getTheta(self.obj, index)
+    # Get whether or not the wall is eating us.
+    def ranIntoWall(self):
+        return visionlib.ranIntoWall()
+
 
 # Example code
+
 if __name__ == "__main__":
     v = Vision()
     while True:

@@ -14,10 +14,6 @@ from arduino import createArduinoInterface, ArduinoInterfaceInputWrapper, Arduin
 # This is the master process, it should control everything. It's also
 # what should get called to run this whole thing.
 
-'''class FakeInterface:
-    def setMotorSpeed( motor_num, speed ):
-        print "Motor", motor_num, "set to speed", speed
-'''
 if __name__ == "__main__":
 
     # Create the arduino interface
@@ -39,7 +35,6 @@ if __name__ == "__main__":
     so it will wait for actual inputs coming in through the pipe to
     step b3.
     '''
-
     #Create the structure for checkpoint 4.
     vision = BlarghProcessStarter( VisionBlargh(), True )
     world = BlarghProcessStarter( WorldBlargh(), True) #Async for Odometry purposes.

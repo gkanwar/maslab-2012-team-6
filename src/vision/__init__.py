@@ -4,7 +4,7 @@ from vision import Vision
 # Eventually should take in vision data and process it
 class VisionBlargh(Blargh):
     def __init__(self):
-        # Initialize the Vision wrapper class for the vision library
+        # Initialize the Vision object
         self.vision = Vision()
 
     def step(self, inp):
@@ -16,4 +16,5 @@ class VisionBlargh(Blargh):
         ballList = []
         for i in range(self.vision.getNumBalls()):
             ballList.append((self.vision.getR(i), self.vision.getTheta(i)))
-        return ballList
+        ranIntoWall = self.vision.ranIntoWall()
+        return (ballList, ranIntoWall)

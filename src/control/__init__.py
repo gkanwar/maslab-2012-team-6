@@ -1,12 +1,13 @@
 from blargh import Blargh
+from math import pi
 import time
 
 class ControlBlargh(Blargh):
     
     def __init__(self, arduinoInterface):
         self.arduinoInterface = arduinoInterface
-        self.angleThreshold = .001
-        self.driveThreshold = .001
+        self.angleThreshold = pi / 12
+        self.driveThreshold = .3
         self.anglePID = PID((.2,0,0))
         self.drivePID = PID((.3,0,0))
         self.goal = None
@@ -15,19 +16,23 @@ class ControlBlargh(Blargh):
         if not goal == None:
             self.goal = goal
         if not self.goal == None:
-            if(abs(self.goal[1])>angleThreshold):
-                pval = anglePID(goal[1])
-                print "Setting Motor Speeds to turn!"
+            r, theta = self.goal
+            # Make sure theta is between -pi and pi to avoid spinning in circles.
+            while theta > pi:
+                theta += -2 * pi
+            while theta < -1 * pi:
+                theta += 2 * pi
+            if(abs(theta)>self.angleThreshold):
+                pval = self.anglePID.update(theta)
                 self.arduinoInterface.setMotorSpeed(0, pval)
                 self.arduinoInterface.setMotorSpeed(1, -pval)
-            elif(abs(self.goal[0])>driveThreshold):
-                print "Setting Motor Speeds to drive!"
-                pval = drivePID(goal[0])
+            elif(abs(r)>self.driveThreshold):
+                pval = self.drivePID.update(r)
                 self.arduinoInterface.setMotorSpeed(0, pval)
                 self.arduinoInterface.setMotorSpeed(1, pval)
-        else:
-            print "My world is a void of nothingness
-
+            else:
+                self.arduinoInterface.setMotorSpeed(0, 0)
+                self.arduinoInterface.setMotorSpeed(1, 0)
 
 class PID:
 
@@ -43,12 +48,12 @@ class PID:
     def update(self, stpt):
         currTime = time.time()
         self.linErr = stpt
-        self.divErr = (lastval - stpt) / (currTime - self.prevTime)
+        self.divErr = (self.lastVal - stpt) / (currTime - self.prevTime)
         self.lastval = stpt
         self.sumErr += stpt * (currTime - self.prevTime)
-        self.intErr = sumErr / (currTime - self.startTime)
+        self.intErr = self.sumErr / (currTime - self.startTime)
         self.prevTime = currTime 
-        pval = P*linErr + I*intErr + D*divErr
+        pval = self.P*self.linErr + self.I*self.intErr + self.D*self.divErr
         if(pval>=1):  
             pval = 1
         if(pval<=-1):
