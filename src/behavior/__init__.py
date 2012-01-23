@@ -20,6 +20,8 @@ BALL_CAPTURE_THRESHOLD = 11
 THETA_THRESHOLD = pi / 6
 AQUIRE_TIME = 2
 
+STATE_CHANGE_FLAG = 0
+
 class State:
 
     def step( self, time ):
@@ -33,7 +35,7 @@ class EscapeState( State ):
 
 
         if world. time > 179:
-            return DeadState(), ( 0, 0 )
+            return DeadState(), STATE_CHANGE_FLAG
 
         if ( world.time - self.startTime < BACKUP_TIME ):
             goal = ( -1, 0 )
@@ -44,10 +46,10 @@ class EscapeState( State ):
         # If we hit a wall, stop what we're doing and escape the wall.
         # This SEEMS redundant, but it keeps us from turning into a situation we can't escape from.
         if world.isWallInFront():
-            return EscapeState(), ( 0, 0 )
+            return EscapeState(), STATE_CHANGE_FLAG
         #If we've hit the timeout, switch to driving straight.
         if ( world.time - self.startTime > BACKUP_TIME + TURN_TIME ):
-            return DriveStraightState( time ), ( 0, 0 )
+            return DriveStraightState( time ), STATE_CHANGE_FLAG
         #Otherwise, keep turning.
         else:
             return self, goal
@@ -60,7 +62,7 @@ class DriveStraightState( State ):
     def step( self ):
 
         if world. time > 179:
-            return DeadState(), ( 0, 0 )
+            return DeadState(), STATE_CHANGE_FLAG
 
         goal = ( 1, 0 )
         
@@ -68,15 +70,15 @@ class DriveStraightState( State ):
 
         # If we hit a wall or random chance of 0.0875 chance per second , stop what we're doing and escape the wall.
         if world.isWallInFront() or random.random < 1 - ( 1 - 0.0875)**(world.time - self.lastTime):
-            return EscapeState(), ( 0, 0 )
+            return EscapeState(), STATE_CHANGE_FLAG
 
         #If we see a ball...
         elif len( world.balls ) > 0 :
-            return SeekBallState(), ( 0, 0 )
+            return SeekBallState(), STATE_CHANGE_FLAG
 
         #With 0.50 chance per second, switch to turning.
         if random.random() < 1 - ( 1 - 0.50 )**(world.time - self.lastTime):
-            return TurnState(), ( 0, 0 )
+            return TurnState(), STATE_CHANGE_FLAG
 
         # Otherwise, full steam ahead.
         else:
@@ -91,7 +93,7 @@ class TurnState( State ):
     def step( self ):
         
         if world. time > 179:
-            return DeadState(), ( 0, 0 )
+            return DeadState(), STATE_CHANGE_FLAG
 
         goal = ( 0, pi / 2 )
 
@@ -100,15 +102,15 @@ class TurnState( State ):
 
         # If we hit a wall, stop what we're doing and escape the wall.
         if world.isWallInFront():
-            return EscapeState(), ( 0, 0 )
+            return EscapeState(), STATE_CHANGE_FLAG
 
         #If we see a ball...
         elif len( world.balls ) > 0 :
-                return SeekBallState(), ( 0, 0 )
+                return SeekBallState(), STATE_CHANGE_FLAG
 
         #With 0.10 chance per second, switch to driving forward.
         if random.random() < 1 - ( 1 - 0.10 )**(world.time - self.lastTime):
-            return DriveStraightState(), ( 0, 0 )
+            return DriveStraightState(), STATE_CHANGE_FLAG
 
         #Otherwise, turn.
         else:
@@ -120,15 +122,15 @@ class SeekBallState( State ):
     def step( self ):
 
         if world. time > 179:
-            return DeadState(), ( 0, 0 )
+            return DeadState(), STATE_CHANGE_FLAG
 
         #If we hit a wall, stop what we're doing and escape the wall.
         if world.isWallInFront():
-            return EscapeState(), ( 0, 0 )
+            return EscapeState(), STATE_CHANGE_FLAG
 
         #If we've lost sight of all balls, go back to driving around.
         if len( world.balls ) == 0 :
-                return DriveStraightState(), ( 0, 0 )
+                return DriveStraightState(), STATE_CHANGE_FLAG
 
         else:
             closestBall = None
@@ -140,7 +142,7 @@ class SeekBallState( State ):
                     closestBall = ball
             #If the ball is close enough to capture and we're facing the right way, do so.
             if closestBall[0] < BALL_CAPTURE_THRESHOLD and ( closestBall[1] < THETA_THRESHOLD or closestBall[1] > 2 * pi - THETA_THRESHOLD ):
-                return AquireBallState(), ( 0, 0 )
+                return AquireBallState(), STATE_CHANGE_FLAG
             #Otherwise, keep seeking.
             else:
                 return self, closestBall
@@ -152,7 +154,7 @@ class AquireBallState( State ):
     def step( self ):
 
         if world. time > 179:
-            return DeadState(), ( 0, 0 )
+            return DeadState(), STATE_CHANGE_FLAG
 
         goal = ( 1, 0 )
 
@@ -161,10 +163,10 @@ class AquireBallState( State ):
 
         #If we hit a wall, stop what we're doing and escape the wall.
         if world.isWallInFront():
-            return EscapeState(), ( 0, 0 )
+            return EscapeState(), STATE_CHANGE_FLAG
         #If we've hit the timeout, switch to driving straight.
         if ( world.time - self.startTime > AQUIRE_TIME ):
-            return DriveStraightState(), ( 0, 0 )
+            return DriveStraightState(), STATE_CHANGE_FLAG
 
         #Otherwise, full steam ahead.
         else:
@@ -180,7 +182,7 @@ class StateMachine:
 
     def __init__( self, firstState ):
         self.state = firstState
-        self.goal = (0, 0)
+        self.goal = STATE_CHANGE_FLAG
 
     def step( self ):
         print "State:",self.state
