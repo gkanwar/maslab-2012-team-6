@@ -1,4 +1,5 @@
 from blargh import Blargh
+from math import pi
 import time
 
 class ControlBlargh(Blargh):
@@ -15,12 +16,18 @@ class ControlBlargh(Blargh):
         if not goal == None:
             self.goal = goal
         if not self.goal == None:
-            if(abs(self.goal[1])>self.angleThreshold):
-                pval = self.anglePID.update(self.goal[1])
+            r, theta = self.goal
+            # Make sure theta is between -pi and pi to avoid spinning in circles.
+            while theta > pi:
+                theta += -2 * pi
+            while theta < -1 * pi:
+                theta += 2 * pi
+            if(abs(theta)>self.angleThreshold):
+                pval = self.anglePID.update(theta)
                 self.arduinoInterface.setMotorSpeed(0, pval)
                 self.arduinoInterface.setMotorSpeed(1, -pval)
-            elif(abs(self.goal[0])>self.driveThreshold):
-                pval = self.drivePID.update(self.goal[0])
+            elif(abs(r)>self.driveThreshold):
+                pval = self.drivePID.update(r)
                 self.arduinoInterface.setMotorSpeed(0, pval)
                 self.arduinoInterface.setMotorSpeed(1, pval)
 
