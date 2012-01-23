@@ -3,7 +3,7 @@ sys.path.append("../lib")
 
 import time
 
-from blargh.blargh_process import BlarghProcessStarter, cascadeBlarghProcesses, killAllBlarghProcesses
+from blargh.blargh_process import BlarghProcessStarter, cascadeBlarghProcesses, killAllBlarghProcesses, killBlarghProcess
 from world import WorldBlargh
 from behavior import BehaviorBlargh
 from control import ControlBlargh
@@ -35,9 +35,11 @@ if __name__ == "__main__":
     # Main timer loop, kill all processes when time runs out
     # FIXME
     startTime = time.time()
-    while time.time() - startTime < 3 * 60:
+    while time.time() - startTime < 3 * 30:
         time.sleep(1)
 
     print "Killing Everything!"
-    killAllBlarghProcesses(processes)
+    #killAllBlarghProcesses(processes)
+    for proc in processes:
+        killBlarghProcess(proc)
     masterConn.send(("KILL", None))

@@ -10,12 +10,10 @@
 
 using namespace std;
 
-#define CAMERA_NUM 0
+#define CAMERA_NUM 1
 #define NUM_FRAMES_TO_AVERAGE 2
 
 #define RED_DISPARITY 100
-#define BLUE_DISPAIRTY 30;
-#define BLUE_THRESHOLD 10;
 #define RED_THRESHOLD 60
 #define ECCENTRICITY_THRESHOLD 0.1
 
@@ -78,6 +76,7 @@ class ImageProcessing
         // Declare a vector of balls
         vector<Ball> balls;
         bool ranIntoWall;
+        int ballCount;
 
         ImageProcessing()
         {
@@ -108,6 +107,8 @@ class ImageProcessing
 
 
             pthread_create(&frameCapture, NULL, frameCaptureThread, NULL);
+            ranIntoWall = false;
+            ballCount = 0;
         }
 
         ~ImageProcessing()
@@ -223,25 +224,6 @@ class ImageProcessing
                 }
             }
 	    
- 	    int blueCount = 0;
-	    for (int i = 0; i < normalized->height; i++)
-	    {
-                for (int j = 0; j < normalized->width; j++)
-                {
-                    int ballImageIndex = i * ballImage->widthStep + j * ballImage->nChannels;
-                    int frameIndex = i * normalized->widthStep + j * normalized->nChannels;
-                    uchar* imageData = (uchar*) frame->imageData;
-                    if (imageData[frameIndex] >= imageData[frameIndex + 2] + BLUE_DISPARITY
-                          && imageData[frameIndex] >= imageData[frameIndex+1] + BLUE_DISPARITY
-                          && imageData[frameIndex] >= BLUE_THRESHOLD)
-                    {
-		      blueCount++ ;
-                    }
-                }
-            }
-	    ranIntoWall = (blueCount >= 480 * 200);
-
-       
             cvShowImage("Intermediate", ballImage);
 
             // Get contours in the image
@@ -310,9 +292,6 @@ class ImageProcessing
         {
             return balls[index].theta;
         }
-        bool ranIntowall(){
-	  return ranIntoWall;
-        }
 };
 
 extern "C"
@@ -340,10 +319,6 @@ extern "C"
     float getTheta(ImageProcessing* ip, int index)
     {
         return ip->getTheta(index);
-    }
-    bool ranIntoWall(ImageProcessing* ip)
-    {
-        return ip->ranIntowall();
     }
 }
 

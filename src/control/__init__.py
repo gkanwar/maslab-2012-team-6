@@ -9,7 +9,7 @@ class ControlBlargh(Blargh):
         self.angleThreshold = pi / 12
         self.driveThreshold = .3
         self.anglePID = PID((.2,0,0))
-        self.drivePID = PID((.3,0,0))
+        self.drivePID = PID((.6,0,0))
         self.goal = None
     
     def step(self, goal):
