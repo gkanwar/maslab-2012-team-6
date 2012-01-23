@@ -9,7 +9,11 @@ import random
 PIXELS_PER_INCH = 3
 # Robot constraints
 ROBOT_RADIUS = 7
-ROBOT_MAX_SIGHTING_ANGLE = pi / 6
+BALL_PICKUP_DISTANCE = 5.5
+
+#Camera constraints
+CAMERA_MAX_SIGHTING_ANGLE = pi / 6
+CAMERA_MIN_SIGHTING_DISTANCE = 10
 
 
 # Helper function to convert a point in x, y space to r, theta space
@@ -22,14 +26,14 @@ def toPolar(x, y):
 class Simulator:
     def __init__(self):
         # Initialize variables
-        self.xSize =400
-        self.ySize = 200
+        self.xSize =300
+        self.ySize = 170
 
         self.robot = Robot((self.xSize / 2 , self.ySize / 2))
         self.balls = [Ball((random.randint(0, self.xSize),
                             random.randint(0, self.ySize)),
                             self.robot)
-                      for i in range(12)]
+                      for i in range(14)]
         
         self.objects = []
         self.objects.extend(self.balls)
@@ -103,7 +107,7 @@ class Robot(Object):
         self.rightMotorSaturation = 0
 
         # Sensor data
-        self.maxSightingAngle = ROBOT_MAX_SIGHTING_ANGLE
+        self.maxSightingAngle = CAMERA_MAX_SIGHTING_ANGLE
         self.sightedBalls = []
 
     # Update the Robot's position
@@ -115,13 +119,11 @@ class Robot(Object):
         # I'm assuming this function gets called pretty often, so I can
         # decouple the motions.
         avgSpeed = self.maxMotorSpeed * (self.leftMotorSaturation + self.rightMotorSaturation) / 2
-        print "AvgSpeed", avgSpeed
         self.x += delTime * avgSpeed * sin(self.heading)
         self.y += delTime * avgSpeed * cos(self.heading)
 
         # That's right. Radians, bitches.
         self.heading += self.maxMotorSpeed * delTime * (self.leftMotorSaturation - self.rightMotorSaturation) / (2 * self.radius)
-        print "Heading", self.heading
         while self.heading > 2 * pi:
             self.heading += -2 * pi
         while self.heading < 0:
@@ -180,8 +182,11 @@ class Robot(Object):
             while theta < -1 * pi:
                 theta += 2 * pi
 
-            # If the camera is pointing close to the ball, we see it!
-            if abs(theta) < self.maxSightingAngle:
+            # If
+            # (a) the camera is pointing close to the ball
+            # (b) the ball hasn't been picked up yet.
+            # Then we see it!
+            if abs(theta) < self.maxSightingAngle and not ball.isAquired:
                 self.sightedBalls.append((r, theta))
                 ball.isSighted = True
             else:
@@ -192,21 +197,25 @@ class Ball(Object):
     def __init__(self, position, robot):
         # Initialize the location of the ball
         self.x, self.y = position
-        # Why does the ball have a reference to the robot??
         self.robot = robot
         # Designates if the ball has been spotted by the camera this step
         # so coloring can change.
         self.isSighted = False
+        self.isAquired = False
 
     def step(self):
-        # Balls do nothing when stepped (for now)
-        pass
+        # See if the robot is close enough to pick the ball up.
+        r, theta = toPolar( self.y - self.robot.y, self.x - self.robot.x )
+        if r < BALL_PICKUP_DISTANCE:
+            self.isAquired = True
 
     # Draw the ball to the screen
     def draw(self, screen):
-        color = (255, 0, 0)
+        color = ( 255, 0, 0 )
         if self.isSighted:
-            color = (255, 255, 0)
+            color = ( 255, 255, 0 )
+        if self.isAquired:
+            color = ( 0, 127, 255 )
         pygame.draw.circle(screen, color,
                              (int(PIXELS_PER_INCH * self.x),
                               int(PIXELS_PER_INCH * self.y)),
