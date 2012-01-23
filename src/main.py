@@ -7,7 +7,7 @@ from blargh.blargh_process import BlarghProcessStarter, cascadeBlarghProcesses, 
 from vision import VisionBlargh
 from world import WorldBlargh
 from behavior import BehaviorBlargh
-from controls import ControlBlargh
+from control import ControlBlargh
 
 from arduino import createArduinoInterface, ArduinoInterfaceInputWrapper, ArduinoInterfaceOutputWrapper
 
@@ -36,10 +36,10 @@ if __name__ == "__main__":
     step b3.
     '''
     #Create the structure for checkpoint 4.
-    vision = BlarghProcessStarter( VisionBlargh(), True )
-    world = BlarghProcessStarter( WorldBlargh(), True) #Async for Odometry purposes.
-    behavior = BlarghProcessStarter( BehaviorBlargh(), True) #Async because this has timeouts, etc.
-    control = BlarghProcessStarter( ControlBlargh( arduinoInterfaceOutputWrapper ), True )
+    vision = BlarghProcessStarter( VisionBlargh, [], True )
+    world = BlarghProcessStarter( WorldBlargh, [], True) #Async for Odometry purposes.
+    behavior = BlarghProcessStarter( BehaviorBlargh, [], True) #Async because this has timeouts, etc.
+    control = BlarghProcessStarter( ControlBlargh, [arduinoInterfaceOutputWrapper], True )
 
     cascadeBlarghProcesses(vision, world)
     cascadeBlarghProcesses(world, behavior)

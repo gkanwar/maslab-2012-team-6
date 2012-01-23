@@ -30,6 +30,10 @@ def simulatorInterface(pipes):
             # Set the servo angle via the wrapper
             simulator.robot.setServoAngle(servoNum, angle)
             conn.send("DONE")
+        elif (cmd == "KILL"):
+            simulator.robot.setMotorSpeed(0, 0)
+            simulator.robot.setMotorSpeed(1, 0)
+            return "KILL"
         else:
             # Raise a value error, because none of the possible inputs
             # were matched
@@ -39,7 +43,8 @@ def simulatorInterface(pipes):
     while True:
         for pipe in pipes:
             if (pipe.poll()):
-                handleCommand(pipe)
+                if (handleCommand(pipe) == "KILL"):
+                    return 0
         simulator.step()
         simulator.draw()
 

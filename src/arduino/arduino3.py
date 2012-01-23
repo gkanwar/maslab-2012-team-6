@@ -161,6 +161,7 @@ class Arduino(threading.Thread):
         output += ";"
 
         self.port.write(output)
+        print output
     
     # Getting and setting values for sensors and actuators
     def setMotorSpeed(self, motorNum, speed):

@@ -10,16 +10,6 @@ def blarghProcess(BlarghClass, args, masterConn, inPipes, outPipes, async):
     # Initialize the blargh
     blargh = BlarghClass(*args)
 
-    # Handle a tuple input from the master process
-    def handleMasterInput(inp):
-        # Unpack the tuple
-        cmd, arg = inp
-        # Handle the arg based on the cmd
-        if (cmd == "KILL"):
-            return 0
-        else:
-            raise ValueError
-
     # Send out an output to all the outPipes
     def sendOut(output):
         for pipe in outPipes:
@@ -33,11 +23,13 @@ def blarghProcess(BlarghClass, args, masterConn, inPipes, outPipes, async):
         # Poll the master pipe
         if (masterConn.poll()):
             # If there was something, receive it
-            cmd, arg = pipe.recv()
+            cmd, arg = masterConn.recv()
             # Process the command
             if (cmd == "KILL"):
+                print "Blargh", blargh, "dying!"
                 return 0
             else:
+                print cmd, arg
                 raise ValueError
         # Poll all the other inPipes
         for pipe in inPipes:
@@ -64,8 +56,10 @@ def killBlarghProcess(blarghMaster):
 def killAllBlarghProcesses(blarghMasters):
     # Send all the KILL's first, then join them all for efficiency
     for blarghMaster in blarghMasters:
+        print "BlarghMaster", blarghMaster, "killing"
         blarghMaster.conn.send(("KILL", None))
     for blarghMaster in blarghMasters:
+        print "BlarghMaster", blarghMaster, "joining"
         blarghMaster.proc.join()
 
 # Called from the master process to send the correct signals to cascade
