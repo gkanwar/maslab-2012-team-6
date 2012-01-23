@@ -5,7 +5,7 @@ class ControlBlargh(Blargh):
     
     def __init__(self, arduinoInterface):
         self.arduinoInterface = arduinoInterface
-        self.angleThreshold = .2
+        self.angleThreshold = .1
         self.driveThreshold = .3
         self.anglePID = PID((.2,0,0))
         self.drivePID = PID((.3,0,0))

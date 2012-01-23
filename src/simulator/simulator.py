@@ -6,7 +6,7 @@ import random
 
 # Constants
 # Scale everything by this constant factor when drawing.
-PIXELS_PER_INCH = 5
+PIXELS_PER_INCH = 3
 # Robot constraints
 ROBOT_RADIUS = 7
 ROBOT_MAX_SIGHTING_ANGLE = pi / 6
@@ -22,14 +22,14 @@ def toPolar(x, y):
 class Simulator:
     def __init__(self):
         # Initialize variables
-        self.xSize = 200
-        self.ySize = 100
+        self.xSize =400
+        self.ySize = 200
 
         self.robot = Robot((self.xSize / 2 , self.ySize / 2))
         self.balls = [Ball((random.randint(0, self.xSize),
                             random.randint(0, self.ySize)),
                             self.robot)
-                      for i in range(50)]
+                      for i in range(12)]
         
         self.objects = []
         self.objects.extend(self.balls)
@@ -155,9 +155,9 @@ class Robot(Object):
     # Simulates setting a motor speed
     def setMotorSpeed(self, motorNum, speed):
         if motorNum == 0:
-            self.leftMotorSaturation = speed
-        elif motorNum == 1:
             self.rightMotorSaturation = speed
+        elif motorNum == 1:
+            self.leftMotorSaturation = speed
 
     # Simulates setting a servo angle
     def setServoAngle(self, servoNum, angle):
