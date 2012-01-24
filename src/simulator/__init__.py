@@ -19,7 +19,7 @@ def simulatorInterface(pipes):
             conn.send(simulator.robot.getBumpSensorHit(arg))
         elif (cmd == "VISION"):
             # Send back ball locations
-            conn.send(simulator.getBallsDetected())
+            conn.send(simulator.robot.camera.detectBalls( simulator.balls ) )
         elif (cmd == "MOTOR"):
             motorNum, speed = arg
             # Set the motor speed via the wrapper

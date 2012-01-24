@@ -11,16 +11,29 @@ PIXELS_PER_INCH = 3
 ROBOT_RADIUS = 7
 BALL_PICKUP_DISTANCE = 5.5
 
-#Camera constraints
+# Camera constraints
 CAMERA_MAX_SIGHTING_ANGLE = pi / 6
 CAMERA_MIN_SIGHTING_DISTANCE = 10
 
 
-# Helper function to convert a point in x, y space to r, theta space
-def toPolar(x, y):
+# Converts a point in (x, y) to (r, theta)
+def toPolar( ( x, y ) ):
     r = sqrt(x**2 + y**2)
-    angle = atan2(y, x)
-    return (r, angle)
+    theta = atan2(y, x)
+    return (r, theta)
+
+# Converts a point in (r, theta) to (x, y)
+def toCartesian( ( r, theta ) ):
+    x = r * cos( theta )
+    y = r * sin( theta )
+    return ( x, y )
+
+# Adds two points in (x,y)
+def vectorAdd( v1, v2 ):
+    return ( v1[0] + v2[0], v1[1] + v2[1] )
+# Subtracts two points in (x,y)
+def vectorSubtract( v1, v2 ):
+    return ( v1[0] - v2[0], v1[1] - v2[1] )
 
 # Actually handles simulating all the objects and the robot
 class Simulator:
@@ -33,7 +46,7 @@ class Simulator:
         self.balls = [Ball((random.randint(0, self.xSize),
                             random.randint(0, self.ySize)),
                             self.robot)
-                      for i in range(14)]
+                      for i in range(12)]
         
         self.objects = []
         self.objects.extend(self.balls)
@@ -62,11 +75,6 @@ class Simulator:
             ball.step()
         self.robot.step()
 
-    # TODO: Reorganize so that this can go with robot
-    # Simulates camera vision
-    def getBallsDetected(self):
-        return self.robot.camera.detectBalls(self.balls)
-
 
 class Object:
     '''Basic Object Class.'''
@@ -85,51 +93,61 @@ class Object:
 
 class Component:
     # Takes a refrence to the robot of which this is a part.
-    def __init__( self, robot ):
+    # offset = offset on the robot in (r, theta) (theta = 0 is the front)
+    # headingOffset = Angle the sensor is pointing at in radians.
+    def __init__( self, robot, offset, headingOffset ):
         self.robot = robot
+
+        self.offset = offset
+        self.headingOffset = headingOffset
         # Make sure we fill up our position, etc.
         self.step()
 
     def step( self ):
-        self.position = self.robot.position
-        self.heading = self.robot.heading
+        #Get ( x, y ) offset from the robot.
+        r, theta = self.offset
+        self.position = vectorAdd( self.robot.position, toCartesian( ( r, theta + self.robot.heading ) ) )
+
+        self.heading = self.robot.heading + self.headingOffset
         
 #Encapsulates Camera functionality for nice code later
 class Camera( Component ):
-    def __init__( self, robot, maxSightingAngle, minSightingDistance ):
-        self.robot = robot
-        self.maxSightingAngle = maxSightingAngle
-        self.minSightingDistance = minSightingDistance
-
-        self.step()
 
     # Takes an ( x, y ) position and returns true if that position can be seen by the camera.
-    def canSeePosition( self, position ):
+    def canSee( self, position ):
         x, y = position
-        r, theta = toPolar(y - self.position[1], x - self.position[0])
-        theta = self.heading - theta
+        r, theta = toPolar( ( y - self.position[1], x - self.position[0] ) )
+
+        #Rotate the point so that theta = 0 means it's right in front of the camera.
+        theta = theta - self.heading
+
         # Make sure theta is between -pi and pi
         while theta > pi:
             theta += -2 * pi
         while theta < -1 * pi:
             theta += 2 * pi
-        # Returns True if the position is in the vision cone.
-        return ( abs(theta) < self.maxSightingAngle and r > self.minSightingDistance )
 
+        # Returns True if the position is in the vision cone.
+        return ( abs(theta) < CAMERA_MAX_SIGHTING_ANGLE and r > CAMERA_MIN_SIGHTING_DISTANCE )
+
+    
     def detectBalls(self, balls):
         self.sightedBalls = []
-        for ball in balls:
-            # Find the theta of the of the ball with respect to the polar
-            # coordante system centered on the robot.
-            x, y = self.position
-            r, theta = toPolar(ball.y - y, ball.x - x)
-            theta = self.heading - theta
-            
+        for ball in balls:         
             # If
             # (a) the camera is pointing at the ball
             # (b) the ball hasn't been picked up yet.
             # Then we see it!
-            if self.canSeePosition( ( ball.x, ball.y ) ) and not ball.isAquired:
+            if self.canSee( ball.position ) and not ball.isAquired:
+                ballx, bally = ball.position
+                r, theta = toPolar( ( bally - self.position[1], ballx - self.position[0] ) )
+                theta = self.heading - theta
+                # Make sure theta is between -pi and pi
+                while theta > pi:
+                    theta += -2 * pi
+                while theta < -1 * pi:
+                    theta += 2 * pi
+
                 self.sightedBalls.append( ( r, theta ) )
                 ball.isSighted = True
             else:
@@ -162,8 +180,8 @@ class Robot(Object):
         self.leftMotorSaturation = 0
         self.rightMotorSaturation = 0
 
-        # Sensor data
-        self.camera = Camera( self, CAMERA_MAX_SIGHTING_ANGLE, CAMERA_MIN_SIGHTING_DISTANCE )
+        # Sensors
+        self.camera = Camera( self, ( 0, 0 ), 0 )
         self.components = [ self.camera ]
         self.sightedBalls = []
 
@@ -250,7 +268,7 @@ class Wall(Object):
 class Ball(Object):
     def __init__(self, position, robot):
         # Initialize the location of the ball
-        self.x, self.y = position
+        self.position = position
         self.robot = robot
         # Designates if the ball has been spotted by the camera this step
         # so coloring can change.
@@ -259,8 +277,7 @@ class Ball(Object):
 
     def step(self):
         # See if the robot is close enough to pick the ball up.
-        robotx, roboty = self.robot.position
-        r, theta = toPolar( self.y - roboty, self.x - robotx )
+        r, theta = toPolar( vectorSubtract( self.position, self.robot.position ) )
         if r < BALL_PICKUP_DISTANCE:
             self.isAquired = True
 
@@ -271,14 +288,15 @@ class Ball(Object):
             color = ( 255, 255, 0 )
         if self.isAquired:
             color = ( 0, 127, 255 )
+        x, y = self.position
         pygame.draw.circle(screen, color,
-                             (int(PIXELS_PER_INCH * self.x),
-                              int(PIXELS_PER_INCH * self.y)),
+                             (int(PIXELS_PER_INCH * x),
+                              int(PIXELS_PER_INCH * y)),
                               int(PIXELS_PER_INCH * 0.875))
 
 from blargh import Blargh
 
-# Create our own vision blargh to interface correctly with the simulator
+# Create our own vision blargh to interface correctly with the rest of the program
 class VisionBlargh(Blargh):
     def __init__(self, simulatorInterface):
         self.simulatorInterface = simulatorInterface
