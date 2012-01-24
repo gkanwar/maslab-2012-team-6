@@ -1,9 +1,20 @@
-* Make sure that the rail interfaces with the braces correctly.
+*Everything:
+    * Import all other parts and do prelim stuff.
+    *Change all screw mounts and holes based on empirical cutter measurments
+    *Change interior lines to mounts in all files
+*Rails:
+    *Make rails from sides
+    *Modify back brace interface.
+    *Make sure that the rail interfaces with the braces correctly.
 
-* Make sure the sides interface with braces correctly.
+*Sides:
+    *Make sure the sides interface with braces correctly.
 
-* Change all screw mounts and holes. Based on empirical cutter mesurments
+*Base:
+    *Copy interface with side
+    *Add interface with cross braces
+    *Add wheel holes
+    *Add sensor mounts
 
-* Import all other parts and do prelim stuff.
 
 * Make sure the back IR/ Button both fit
