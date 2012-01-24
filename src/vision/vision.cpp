@@ -238,7 +238,7 @@ class ImageProcessing
 
             // Get contours in the image
             CvSeq* contours = NULL;
-            cvFindContours(ballImage, contourStorage, &contours);
+            cvFindContours(ballImage, contourStorage, &contours, sizeof(CvContour), CV_RETR_EXTERNAL);
             // Show it!
             cout << "After finding contours " << clock() << endl;
 
@@ -262,22 +262,25 @@ class ImageProcessing
                     cvSeqPush(listOfPoints, CV_GET_SEQ_ELEM(CvPoint, contour, i));
                 }
                 ellipseBound = cvFitEllipse2(listOfPoints);
+                cvEllipse(ellipseImage, cvPoint(ellipseBound.center.x, ellipseBound.center.y), cvSize(ellipseBound.size.width/2, ellipseBound.size.height/2), -ellipseBound.angle, 0, 360, CV_RGB(0, 0xff, 0));
                 if (eccentricity(ellipseBound.size.width, ellipseBound.size.height) <= ECCENTRICITY_THRESHOLD)
                 {
-                    cvEllipse(ellipseImage, cvPoint(ellipseBound.center.x, ellipseBound.center.y), cvSize(ellipseBound.size.width/2, ellipseBound.size.height/2), -ellipseBound.angle, 0, 360, CV_RGB(0, 0xff, 0));
                     avgCircleR = (ellipseBound.size.width + ellipseBound.size.height)/2;
-                    balls.push_back(Ball(1000/avgCircleR, ((ellipseBound.center.x/contourImage->width) - 0.5) * FOV));
                 }
                 else
                 {
-                    cvDrawContours(contourImage, contour, CV_RGB(0xff, 0xff, 0xff), CV_RGB(0x99, 0x99, 0x99), -1);
+                    avgCircleR = ellipseBound.size.width > ellipseBound.size.height ?
+                                 ellipseBound.size.width : ellipseBound.size.height;
                 }
+                cvEllipse(ellipseImage, cvPoint(ellipseBound.center.x, ellipseBound.center.y), cvSize(avgCircleR/2, avgCircleR/2), -ellipseBound.angle, 0, 360, CV_RGB(0, 0, 0xff));
+                balls.push_back(Ball(1000/avgCircleR, ((ellipseBound.center.x/contourImage->width) - 0.5) * FOV));
             }
             cvShowImage("Ellipse", contourImage);
 
             cout << "After ellipse processing " << clock() << endl;
 
-            // Process contours with a houghTransform
+            // Process contours with a houghTransform - REDACTED!
+            /*
             CvSeq* houghCircles = cvHoughCircles(contourImage, houghStorage, CV_HOUGH_GRADIENT, 3, 5, 10, 50);
             // Draw them
             for (int i = 0; i < houghCircles->total; i++)
@@ -290,6 +293,7 @@ class ImageProcessing
             cout << "After hough processing " << clock() << endl;
 
             cvShowImage("Output", ellipseImage);
+            */
 
             // We need to pause a little each frame to make sure it doesn't
             // break
