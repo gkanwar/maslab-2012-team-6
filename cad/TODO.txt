@@ -1,0 +1,14 @@
+* HAL is 1.6 in in DIAMETER
+    * In side.dxf adjust the hole and screw accordingly.
+    * Make HalMounts
+    _______
+ __/  ___  \__
+|O   /   \   O|
+|__  \___/  __|
+   \_______/
+
+* Make sure that the rail interfaces with the back brace correctly.
+
+* Change all screw mounts and holes. Based on empirical cutter
+
+* Import all other parts and do prelim stuff.
