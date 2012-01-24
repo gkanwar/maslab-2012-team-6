@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -61,6 +62,10 @@ class Ball
             theta = tempTheta;
         }
 };
+struct ColorHSV
+{
+    float h,s,v;
+};
 
 class ImageProcessing
 {
@@ -81,7 +86,7 @@ class ImageProcessing
         vector<Ball> balls;
         bool ranIntoWall;
         int ballCount;
-
+        ColorHSV hsvArray[256][256][256];
         ImageProcessing()
         {
             // Set up the capture
@@ -121,7 +126,34 @@ class ImageProcessing
             killReceived = true;
             pthread_join(frameCapture, NULL);
         }
+        void loadHSVArray()
+        {
+       	    ifstream hsvFile ("hsvSerial");
+	    char in;
+	    for ( int i = 0; i < 255; i++ )
+	    {
+		for ( int j = 0; j < 255; j++ )
+		{ 
+		    for ( int k = 0; k < 255; k++ )
+		    {
+			hsvFile >> in;
+			hsvArray[i][j][k].h = in;
+			hsvFile >> in;
+			hsvArray[i][j][k].s = in;
+			hsvFile >> in;
+			hsvArray[i][j][k].v = in;
+		    }
+		}
+	    }
+	}
+        ColorHSV convertToHSV( uchar b, uchar g, uchar r )
+        {
+	    return hsvArray[r][g][b];
+	}
 
+	    
+        
+        
         void processBalls()
         {
             cout << "Process balls " << clock() << endl;
