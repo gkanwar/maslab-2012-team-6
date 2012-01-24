@@ -7,10 +7,11 @@
 #include <deque>
 #include <pthread.h>
 #include <vector>
+#include <ctime>
 
 using namespace std;
 
-#define CAMERA_NUM 1
+#define CAMERA_NUM 0
 #define NUM_FRAMES_TO_AVERAGE 2
 
 #define RED_DISPARITY 100
@@ -34,17 +35,19 @@ pthread_t frameCapture;
 bool killReceived = false;
 // Global variables for image capturing
 CvCapture* capture;
-IplImage* frame;
+IplImage* largeFrame;
 
 
 // Frame capture thread, constantly queries the frame
 void* frameCaptureThread(void* ptr)
 {
+    cerr << "Frame capture " << clock() << endl;
     // Constantly query frame
     while (!killReceived)
     {
-        frame = cvQueryFrame(capture);
+        largeFrame = cvQueryFrame(capture);
     }
+    cerr << "End frame capture " << clock() << endl;
 }
 
 class Ball
@@ -63,6 +66,7 @@ class ImageProcessing
 {
     public:
         // Declare images
+        IplImage* frame;
         IplImage* hsvImage;
         IplImage* normalized;
         IplImage* ballImage;
@@ -83,9 +87,10 @@ class ImageProcessing
             // Set up the capture
             capture = cvCaptureFromCAM(CAMERA_NUM);
             // Set up the frame
-            frame = cvCreateImage(cvSize(IMG_WIDTH, IMG_HEIGHT), IPL_DEPTH_8U, 3);
+            largeFrame = cvCreateImage(cvSize(IMG_WIDTH, IMG_HEIGHT), IPL_DEPTH_8U, 3);
 
             // Create all the images
+            frame = cvCreateImage(cvSize(IMG_WIDTH/2, IMG_HEIGHT/2), IPL_DEPTH_8U, 3);
             hsvImage = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
             normalized = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
             ballImage = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 1);
@@ -119,6 +124,11 @@ class ImageProcessing
 
         void processBalls()
         {
+            cout << "Process balls " << clock() << endl;
+
+            // Shrink the frame
+            cvPyrDown(largeFrame, frame);
+
             // Display it
             cvShowImage("Original", frame);
 
@@ -191,7 +201,6 @@ class ImageProcessing
             }
 
             cvCvtColor(hsvImage, normalized, CV_HSV2BGR);
-
             cvShowImage("Int2", normalized);
 
             // Output hue - REDACTED!
@@ -223,13 +232,15 @@ class ImageProcessing
                     }
                 }
             }
-	    
+
+            cout << "After filtering " << clock() << endl;
             cvShowImage("Intermediate", ballImage);
 
             // Get contours in the image
             CvSeq* contours = NULL;
             cvFindContours(ballImage, contourStorage, &contours);
             // Show it!
+            cout << "After finding contours " << clock() << endl;
 
             // Process contours with fit ellipse
             int width, height, numPoints;
@@ -264,6 +275,8 @@ class ImageProcessing
             }
             cvShowImage("Ellipse", contourImage);
 
+            cout << "After ellipse processing " << clock() << endl;
+
             // Process contours with a houghTransform
             CvSeq* houghCircles = cvHoughCircles(contourImage, houghStorage, CV_HOUGH_GRADIENT, 3, 5, 10, 50);
             // Draw them
@@ -274,11 +287,14 @@ class ImageProcessing
                 cvCircle(ellipseImage, pt, cvRound(p[2]), CV_RGB(0xff, 0, 0));
             }
 
+            cout << "After hough processing " << clock() << endl;
+
             cvShowImage("Output", ellipseImage);
 
             // We need to pause a little each frame to make sure it doesn't
             // break
             cvWaitKey(10);
+            cout << "End process balls " << clock() << endl;
         }
         int getNumBalls()
         {

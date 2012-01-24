@@ -19,7 +19,7 @@ class ControlBlargh(Blargh):
             self.goal = goal
         if not self.goal == None:
             if self.goal == STATE_CHANGE_FLAG:
-                print "Changing States!"
+                # print "Changing States!"
                 self.anglePID.reset()
             else:
                 r, theta = self.goal

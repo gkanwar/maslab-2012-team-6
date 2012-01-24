@@ -5,7 +5,7 @@ import random
 class World:
     def __init__( self, balls, time, wallInFront ):
         self.balls = balls
-        print time
+        #print time
         self.time = time
         self.wallInFront = wallInFront
     def isWallInFront( self ):
@@ -185,7 +185,7 @@ class StateMachine:
         self.goal = STATE_CHANGE_FLAG
 
     def step( self ):
-        print "State:",self.state
+        #print "State:",self.state
         self.state, self.goal = self.state.step()
 
         
