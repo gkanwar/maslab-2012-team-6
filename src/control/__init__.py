@@ -2,6 +2,8 @@ from blargh import Blargh
 from math import pi
 import time
 
+STATE_CHANGE_FLAG = 0
+
 class ControlBlargh(Blargh):
     
     def __init__(self, arduinoInterface):
@@ -11,48 +13,48 @@ class ControlBlargh(Blargh):
         self.anglePID = PID((20,20,0))
         self.drivePID = PID((.15,0,0))
         self.goal = None
-    
+    STATE_CHANGE_FLAG = 0
     def step(self, goal):
         if not goal == None:
             self.goal = goal
         if not self.goal == None:
-            if self.goal == (1,0):
-                self.anglePID = PID((5,0,0))
+            if self.goal == STATE_CHANGE_FLAG:
+                print "Changing States!"
+                self.anglePID.reset()
             else:
-                self.anglePID = PID((20,20,0))
-            r, theta = self.goal
-            # Make sure theta is between -pi and pi to avoid spinning in circles.
-            while theta > pi:
-                theta += -2 * pi
-            while theta < -1 * pi:
-                theta += 2 * pi
-            '''if(abs(theta)>self.angleThreshold):
-                pval = self.anglePID.update(theta)
-                self.arduinoInterface.setMotorSpeed(0, pval)
-                self.arduinoInterface.setMotorSpeed(1, -pval)
-            elif(abs(r)>self.driveThreshold):
-                pval = self.drivePID.update(r)
-                self.arduinoInterface.setMotorSpeed(0, pval)
-                self.arduinoInterface.setMotorSpeed(1, pval)
-            else:
-                self.arduinoInterface.setMotorSpeed(0, 0)
-                self.arduinoInterface.setMotorSpeed(1, 0)'''
-            #HACK - ?
-            aval = self.anglePID.update(theta)
-            dval = self.drivePID.update(r)
-            if(aval + dval >=1):
-                self.arduinoInterface.setMotorSpeed(0, 1)
-            elif(aval + dval <=-1):
-                self.arduinoInterface.setMotorSpeed(0, -1)
-            else:
-                self.arduinoInterface.setMotorSpeed(0, aval + dval)
-                
-            if(dval - aval >=1):
-                self.arduinoInterface.setMotorSpeed(1, 1)
-            elif(dval - aval <=-1):
-                self.arduinoInterface.setMotorSpeed(1, -1)
-            else:
-                self.arduinoInterface.setMotorSpeed(1, dval - aval)
+                r, theta = self.goal
+                # Make sure theta is between -pi and pi to avoid spinning in circles.
+                while theta > pi:
+                    theta += -2 * pi
+                while theta < -1 * pi:
+                    theta += 2 * pi
+                '''if(abs(theta)>self.angleThreshold):
+                    pval = self.anglePID.update(theta)
+                    self.arduinoInterface.setMotorSpeed(0, pval)
+                    self.arduinoInterface.setMotorSpeed(1, -pval)
+                elif(abs(r)>self.driveThreshold):
+                    pval = self.drivePID.update(r)
+                    self.arduinoInterface.setMotorSpeed(0, pval)
+                    self.arduinoInterface.setMotorSpeed(1, pval)
+                else:
+                    self.arduinoInterface.setMotorSpeed(0, 0)
+                    self.arduinoInterface.setMotorSpeed(1, 0)'''
+                #HACK - ?
+                aval = self.anglePID.update(theta)
+                dval = self.drivePID.update(r)
+                if(aval + dval >=1):
+                    self.arduinoInterface.setMotorSpeed(0, 1)
+                elif(aval + dval <=-1):
+                    self.arduinoInterface.setMotorSpeed(0, -1)
+                else:
+                    self.arduinoInterface.setMotorSpeed(0, aval + dval)
+                    
+                if(dval - aval >=1):
+                    self.arduinoInterface.setMotorSpeed(1, 1)
+                elif(dval - aval <=-1):
+                    self.arduinoInterface.setMotorSpeed(1, -1)
+                else:
+                    self.arduinoInterface.setMotorSpeed(1, dval - aval)
 
 
 class PID:
@@ -80,3 +82,6 @@ class PID:
         if(pval<=-1):
             pval = -1'''
         return pval
+    def reset( self ):
+        self.startTime = time.time()
+        self.sumErr = 0
