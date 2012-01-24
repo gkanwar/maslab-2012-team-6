@@ -85,8 +85,10 @@ class ImageProcessing
         // Declare a vector of balls
         vector<Ball> balls;
         bool ranIntoWall;
-        int ballCount;
-        ColorHSV hsvArray[256][256][256];
+        struct ColorHSV hsvArray[256][256][256];
+        // Declare thresholds
+        uchar hHigh, hLow, sHigh, sLow, vHigh, vLow;
+
         ImageProcessing()
         {
             // Set up the capture
@@ -115,10 +117,11 @@ class ImageProcessing
             cvNamedWindow("Int2", CV_WINDOW_AUTOSIZE);
             cvNamedWindow("Ellipse", CV_WINDOW_AUTOSIZE);
 
+            // Load the HSV array from memory
+            loadHSVArray();
 
             pthread_create(&frameCapture, NULL, frameCaptureThread, NULL);
             ranIntoWall = false;
-            ballCount = 0;
         }
 
         ~ImageProcessing()
@@ -126,15 +129,17 @@ class ImageProcessing
             killReceived = true;
             pthread_join(frameCapture, NULL);
         }
+
+        // HSV conversion functions
         void loadHSVArray()
         {
        	    ifstream hsvFile ("hsvSerial");
 	    char in;
-	    for ( int i = 0; i < 255; i++ )
+	    for ( int i = 0; i <= 255; i++ )
 	    {
-		for ( int j = 0; j < 255; j++ )
-		{ 
-		    for ( int k = 0; k < 255; k++ )
+		for ( int j = 0; j <= 255; j++ )
+		{
+		    for ( int k = 0; k <= 255; k++ )
 		    {
 			hsvFile >> in;
 			hsvArray[i][j][k].h = in;
@@ -142,20 +147,26 @@ class ImageProcessing
 			hsvArray[i][j][k].s = in;
 			hsvFile >> in;
 			hsvArray[i][j][k].v = in;
+                        if (i == 255 && j == 255 && k == 255)
+                        {
+                            cout << "hue" << hsvArray[i][j][k].h << endl;
+                        }
 		    }
 		}
 	    }
+
+            cout << "HSV array loaded" << endl;
 	}
         ColorHSV convertToHSV( uchar b, uchar g, uchar r )
         {
 	    return hsvArray[r][g][b];
 	}
 
-	    
-        
-        
+
         void processBalls()
         {
+            int index;
+
             cout << "Process balls " << clock() << endl;
 
             // Shrink the frame
@@ -220,7 +231,8 @@ class ImageProcessing
             cvShowImage("Output", averaged);
             */
 
-            // Normalize luminosity somewhat
+            // Normalize luminosity somewhat - REDACTED!
+            /*
             cvCvtColor(frame, hsvImage, CV_BGR2HSV);
 
             for (int i = 0; i < hsvImage->height; i++)
@@ -234,6 +246,24 @@ class ImageProcessing
 
             cvCvtColor(hsvImage, normalized, CV_HSV2BGR);
             cvShowImage("Int2", normalized);
+            */
+
+            // Convert to HSV space
+            struct ColorHSV* hsvVal;
+            for (int i = 0; i < frame->height; i++)
+            {
+                for (int j = 0; j < frame->width; j++)
+                {
+                    index = i * frame->widthStep + j * frame->nChannels;
+                    hsvVal = &(convertToHSV(frame->imageData[index], frame->imageData[index+1], frame->imageData[index+2]));
+                    frame->imageData[index] = hsvVal->h;
+                    frame->imageData[index+1] = hsvVal->s;
+                    frame->imageData[index+2] = hsvVal->v;
+                }
+            }
+            cout << convertToHSV(255, 0, 0).h << " " << convertToHSV(255, 0, 0).s << " " << convertToHSV(255, 0, 0).v << endl;
+            // Show it
+            cvShowImage("Int2", frame);
 
             // Output hue - REDACTED!
             /*
@@ -244,7 +274,8 @@ class ImageProcessing
             cvShowImage("Int2", hueImage);
             */
 
-            // Filter the image for red balls
+            // Filter the image for red balls using BGR - REDACTED!
+            /*
             for (int i = 0; i < normalized->height; i++)
             {
                 for (int j = 0; j < normalized->width; j++)
@@ -264,13 +295,35 @@ class ImageProcessing
                     }
                 }
             }
+            */
+
+            // Filter image using HSV values
+            cvZero(ballImage);
+            for (int i = 0; i < hsvImage->height; i++)
+            {
+                for (int j = 0; j < hsvImage->width; j++)
+                {
+                    index = i * hsvImage->widthStep + j * hsvImage->nChannels;
+                    if (hsvImage->imageData[index] > hLow &&
+                        hsvImage->imageData[index] < hHigh &&
+                        hsvImage->imageData[index+1] > sLow &&
+                        hsvImage->imageData[index+1] < sHigh &&
+                        hsvImage->imageData[index+2] > vLow &&
+                        hsvImage->imageData[index+2] < vLow)
+                    {
+                        ballImage->imageData[index] = 255;
+                    }
+                }
+            }
+
 
             cout << "After filtering " << clock() << endl;
             cvShowImage("Intermediate", ballImage);
 
+
             // Get contours in the image
             CvSeq* contours = NULL;
-            cvFindContours(ballImage, contourStorage, &contours);
+            cvFindContours(ballImage, contourStorage, &contours, sizeof(CvContour), CV_RETR_EXTERNAL);
             // Show it!
             cout << "After finding contours " << clock() << endl;
 
@@ -294,22 +347,25 @@ class ImageProcessing
                     cvSeqPush(listOfPoints, CV_GET_SEQ_ELEM(CvPoint, contour, i));
                 }
                 ellipseBound = cvFitEllipse2(listOfPoints);
+                cvEllipse(ellipseImage, cvPoint(ellipseBound.center.x, ellipseBound.center.y), cvSize(ellipseBound.size.width/2, ellipseBound.size.height/2), -ellipseBound.angle, 0, 360, CV_RGB(0, 0xff, 0));
                 if (eccentricity(ellipseBound.size.width, ellipseBound.size.height) <= ECCENTRICITY_THRESHOLD)
                 {
-                    cvEllipse(ellipseImage, cvPoint(ellipseBound.center.x, ellipseBound.center.y), cvSize(ellipseBound.size.width/2, ellipseBound.size.height/2), -ellipseBound.angle, 0, 360, CV_RGB(0, 0xff, 0));
                     avgCircleR = (ellipseBound.size.width + ellipseBound.size.height)/2;
-                    balls.push_back(Ball(1000/avgCircleR, ((ellipseBound.center.x/contourImage->width) - 0.5) * FOV));
                 }
                 else
                 {
-                    cvDrawContours(contourImage, contour, CV_RGB(0xff, 0xff, 0xff), CV_RGB(0x99, 0x99, 0x99), -1);
+                    avgCircleR = ellipseBound.size.width > ellipseBound.size.height ?
+                                 ellipseBound.size.width : ellipseBound.size.height;
                 }
+                cvEllipse(ellipseImage, cvPoint(ellipseBound.center.x, ellipseBound.center.y), cvSize(avgCircleR/2, avgCircleR/2), -ellipseBound.angle, 0, 360, CV_RGB(0, 0, 0xff));
+                balls.push_back(Ball(1000/avgCircleR, ((ellipseBound.center.x/contourImage->width) - 0.5) * FOV));
             }
             cvShowImage("Ellipse", contourImage);
 
             cout << "After ellipse processing " << clock() << endl;
 
-            // Process contours with a houghTransform
+            // Process contours with a houghTransform - REDACTED!
+            /*
             CvSeq* houghCircles = cvHoughCircles(contourImage, houghStorage, CV_HOUGH_GRADIENT, 3, 5, 10, 50);
             // Draw them
             for (int i = 0; i < houghCircles->total; i++)
@@ -322,6 +378,7 @@ class ImageProcessing
             cout << "After hough processing " << clock() << endl;
 
             cvShowImage("Output", ellipseImage);
+            */
 
             // We need to pause a little each frame to make sure it doesn't
             // break
