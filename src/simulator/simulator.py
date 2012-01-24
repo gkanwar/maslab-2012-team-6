@@ -38,6 +38,7 @@ class Simulator:
         self.objects = []
         self.objects.extend(self.balls)
         self.objects.append(self.robot)
+        self.objects.extend( makeWalls( [ (50,40), (90,100), (20,40) ] ) )
 
         # Initialize pygame for visualization
         pygame.init()
@@ -60,12 +61,11 @@ class Simulator:
         for ball in self.balls:
             ball.step()
         self.robot.step()
-        self.robot.detectBalls(self.balls)
 
     # TODO: Reorganize so that this can go with robot
     # Simulates camera vision
     def getBallsDetected(self):
-        return self.robot.detectBalls(self.balls)
+        return self.robot.camera.detectBalls(self.balls)
 
 
 class Object:
@@ -83,14 +83,31 @@ class Object:
     def draw(self, screen):
         raise NotImplementedError
 
+class Component:
+    # Takes a refrence to the robot of which this is a part.
+    def __init__( self, robot ):
+        self.robot = robot
+        # Make sure we fill up our position, etc.
+        self.step()
+
+    def step( self ):
+        self.position = self.robot.position
+        self.heading = self.robot.heading
+        
 #Encapsulates Camera functionality for nice code later
-class Camera():
-    def __init__( self, maxSightingAngle, minSightingDistance ):
+class Camera( Component ):
+    def __init__( self, robot, maxSightingAngle, minSightingDistance ):
+        self.robot = robot
         self.maxSightingAngle = maxSightingAngle
         self.minSightingDistance = minSightingDistance
-    # Takes an ( r, theta ) position and returns true if that position can be seen by the camera.
+
+        self.step()
+
+    # Takes an ( x, y ) position and returns true if that position can be seen by the camera.
     def canSeePosition( self, position ):
-        r, theta = position
+        x, y = position
+        r, theta = toPolar(y - self.position[1], x - self.position[0])
+        theta = self.heading - theta
         # Make sure theta is between -pi and pi
         while theta > pi:
             theta += -2 * pi
@@ -98,6 +115,27 @@ class Camera():
             theta += 2 * pi
         # Returns True if the position is in the vision cone.
         return ( abs(theta) < self.maxSightingAngle and r > self.minSightingDistance )
+
+    def detectBalls(self, balls):
+        self.sightedBalls = []
+        for ball in balls:
+            # Find the theta of the of the ball with respect to the polar
+            # coordante system centered on the robot.
+            x, y = self.position
+            r, theta = toPolar(ball.y - y, ball.x - x)
+            theta = self.heading - theta
+            
+            # If
+            # (a) the camera is pointing at the ball
+            # (b) the ball hasn't been picked up yet.
+            # Then we see it!
+            if self.canSeePosition( ( ball.x, ball.y ) ) and not ball.isAquired:
+                self.sightedBalls.append( ( r, theta ) )
+                ball.isSighted = True
+            else:
+                ball.isSighted = False
+        return self.sightedBalls
+
 
 class Robot(Object):
     """
@@ -107,7 +145,8 @@ class Robot(Object):
     """
     def __init__(self, position):
         # Initialize position
-        self.x, self.y = position
+        self.position = position
+
         # Initialize radius
         self.radius = ROBOT_RADIUS
         # Set the time, to calculate times between steps
@@ -124,7 +163,8 @@ class Robot(Object):
         self.rightMotorSaturation = 0
 
         # Sensor data
-        self.camera = Camera( CAMERA_MAX_SIGHTING_ANGLE, CAMERA_MIN_SIGHTING_DISTANCE )
+        self.camera = Camera( self, CAMERA_MAX_SIGHTING_ANGLE, CAMERA_MIN_SIGHTING_DISTANCE )
+        self.components = [ self.camera ]
         self.sightedBalls = []
 
     # Update the Robot's position
@@ -133,11 +173,13 @@ class Robot(Object):
         currentTime = time.time()
         delTime = currentTime - self.lastTime
 
+        x, y = self.position
         # I'm assuming this function gets called pretty often, so I can
         # decouple the motions.
         avgSpeed = self.maxMotorSpeed * (self.leftMotorSaturation + self.rightMotorSaturation) / 2
-        self.x += delTime * avgSpeed * sin(self.heading)
-        self.y += delTime * avgSpeed * cos(self.heading)
+        x += delTime * avgSpeed * sin(self.heading)
+        y += delTime * avgSpeed * cos(self.heading)
+        self.position = ( x, y )
 
         # That's right. Radians, bitches.
         self.heading += self.maxMotorSpeed * delTime * (self.leftMotorSaturation - self.rightMotorSaturation) / (2 * self.radius)
@@ -146,20 +188,25 @@ class Robot(Object):
         while self.heading < 0:
             self.heading += 2 * pi
 
-	# Update time
+	    # Update time
         self.lastTime = currentTime
+        
+        #Step all the components
+        for component in self.components:
+            component.step()
 
     # Draw the robot
     def draw(self, screen):
+        x, y = self.position
         pygame.draw.circle(screen, (0, 0, 255),
-                              (int(PIXELS_PER_INCH * self.x),
-                               int(PIXELS_PER_INCH * self.y)),
+                              (int(PIXELS_PER_INCH * x),
+                               int(PIXELS_PER_INCH * y)),
                                int(PIXELS_PER_INCH * self.radius))
         pygame.draw.line(screen, (0, 255, 0),
-                              (int(PIXELS_PER_INCH * self.x),
-                               int(PIXELS_PER_INCH * self.y)),
-                              (int(PIXELS_PER_INCH * (self.x + (self.radius * sin(self.heading)))),
-                               int(PIXELS_PER_INCH * (self.y + (self.radius * cos(self.heading))))))
+                              (int(PIXELS_PER_INCH * x),
+                               int(PIXELS_PER_INCH * y)),
+                              (int(PIXELS_PER_INCH * (x + (self.radius * sin(self.heading)))),
+                               int(PIXELS_PER_INCH * (y + (self.radius * cos(self.heading))))))
 
     # Simulates getting a bump hit
     def getBumpSensorHit(self, bumpSensorNum):
@@ -183,27 +230,23 @@ class Robot(Object):
         # TODO: Implement this
         raise NotImplementedError
 
-    # Takes a list of all the balls in the arena, and determines which the
-    # robot can see.
-    def detectBalls(self, balls):
-        self.sightedBalls = []
-        for ball in balls:
-            # Find the theta of the of the ball with respect to the polar
-            # coordante system centered on the robot.
-            r, theta = toPolar(ball.y - self.y, ball.x - self.x)
-            theta = self.heading - theta
-            
-            # If
-            # (a) the camera is pointing at the ball
-            # (b) the ball hasn't been picked up yet.
-            # Then we see it!
-            if self.camera.canSeePosition( ( r, theta ) ) and not ball.isAquired:
-                self.sightedBalls.append( ( r, theta ) )
-                ball.isSighted = True
-            else:
-                ball.isSighted = False
-        return self.sightedBalls
-
+def makeWalls( points ):
+    walls = []
+    for i in range( len(points) - 1 ):
+        walls.append( Wall( points[i], points[i+1] ) )
+    return walls
+class Wall(Object):
+    def __init__(self, start, end):
+        self.start = start
+        self.end = end
+    def step(self):
+        pass
+    def draw( self, screen ):
+        pygame.draw.line(screen, (0, 255, 0),
+                              (int(PIXELS_PER_INCH * self.start[0]),
+                               int(PIXELS_PER_INCH * self.start[1])),
+                              (int(PIXELS_PER_INCH * self.end[0]),
+                               int(PIXELS_PER_INCH * self.end[1])))
 class Ball(Object):
     def __init__(self, position, robot):
         # Initialize the location of the ball
@@ -216,7 +259,8 @@ class Ball(Object):
 
     def step(self):
         # See if the robot is close enough to pick the ball up.
-        r, theta = toPolar( self.y - self.robot.y, self.x - self.robot.x )
+        robotx, roboty = self.robot.position
+        r, theta = toPolar( self.y - roboty, self.x - robotx )
         if r < BALL_PICKUP_DISTANCE:
             self.isAquired = True
 

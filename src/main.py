@@ -51,7 +51,7 @@ if __name__ == "__main__":
     # TODO: Main timer loop, kill all processes when time runs out
     startTime = time.time()
     while time.time() - startTime < 3 * 60:
-        time.sleep(1)
+        time.sleep(0.5)
 
     print "Killing Everything!"
     killAllBlarghProcesses( processes )

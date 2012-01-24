@@ -18,7 +18,7 @@ BACKUP_TIME = 2
 TURN_TIME = 2
 BALL_CAPTURE_THRESHOLD = 11
 THETA_THRESHOLD = pi / 6
-AQUIRE_TIME = 2
+AQUIRE_TIME = 1
 
 STATE_CHANGE_FLAG = 0
 
@@ -64,7 +64,7 @@ class DriveStraightState( State ):
         if world. time > 179:
             return DeadState(), STATE_CHANGE_FLAG
 
-        goal = ( 1, 0 )
+        goal = ( 5, 0 )
         
         # Update the state.
 
@@ -156,7 +156,7 @@ class AquireBallState( State ):
         if world. time > 179:
             return DeadState(), STATE_CHANGE_FLAG
 
-        goal = ( 1, 0 )
+        goal = ( 5, 0 )
 
         
         #Update the state.
