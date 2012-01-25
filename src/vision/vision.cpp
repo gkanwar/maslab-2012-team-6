@@ -114,11 +114,11 @@ class ImageProcessing
             contourStorage = cvCreateMemStorage(0);
             houghStorage = cvCreateMemStorage(0);
             pointStorage = cvCreateMemStorage(0);
-	    
+
 	    hHigh = 240;
-	    hLow = 20;
+	    hLow = 50;
 	    sHigh = 255;
-	    sLow = 100;
+	    sLow = 50;
 	    vHigh = 255;
 	    vLow = 0;
 
@@ -148,12 +148,12 @@ class ImageProcessing
        	    ifstream hsvFile ("vision/hsvSerial");
             if (!hsvFile)
             {
-                cout << "File input failed!" << endl;
+                cerr << "File input failed!" << endl;
                 return;
             }
 	    else
 	    {
-	      cout << "File input success!" << endl;
+                cerr << "File input success!" << endl;
 	    }
 	    uchar in;
 	    for ( int i = 0; i <= 255; i++ )
@@ -165,15 +165,9 @@ class ImageProcessing
 			hsvArray[i][j][k].h = hsvFile.get();		
 			hsvArray[i][j][k].s = hsvFile.get();
 			hsvArray[i][j][k].v = hsvFile.get();
-                        if (i == 1 && j == 0 && k == 0)
-                        {
-			  cout << "CHECK0" << (int)hsvArray[i][j][k].h << " " << (int)hsvArray[i][j][k].s << " " <<(int) hsvArray[i][j][k].v << endl;
-                        }
 		    }
 		}
 	    }
-
-            cout << "HSV array loaded" << endl;
 	}
         ColorHSV* convertToHSV( uchar b, uchar g, uchar r )
         {
@@ -184,8 +178,6 @@ class ImageProcessing
         void processBalls()
         {
             int index;
-
-            cout << "Process balls " << clock() << endl;
 
             // Shrink the frame
             cvPyrDown(largeFrame, frame);
@@ -279,8 +271,7 @@ class ImageProcessing
                     frame->imageData[index+2] = hsvVal->v;
                 }
             }
-            cout << "CHECK" << convertToHSV(255, 0, 0)->h << " " << convertToHSV(255, 0, 0)->s << " " << convertToHSV(255, 0, 0)->v << endl;
-            cvSplit(frame, NULL, NULL, contourImage, NULL);
+            cvSplit(frame, contourImage, NULL, NULL, NULL);
             // Show it
             cvShowImage("Int2", contourImage);
 
@@ -318,33 +309,32 @@ class ImageProcessing
 
             // Filter image using HSV values
             cvZero(ballImage);
-            for (int i = 0; i < hsvImage->height; i++)
+            int frameIndex, ballIndex;
+            for (int i = 0; i < frame->height; i++)
             {
-                for (int j = 0; j < hsvImage->width; j++)
+                for (int j = 0; j < frame->width; j++)
                 {
-                    index = i * hsvImage->widthStep + j * hsvImage->nChannels;
-                    if (hsvImage->imageData[index] > hLow &&
-                        hsvImage->imageData[index] < hHigh &&
-                        hsvImage->imageData[index+1] > sLow &&
-                        hsvImage->imageData[index+1] < sHigh &&
-                        hsvImage->imageData[index+2] > vLow &&
-                        hsvImage->imageData[index+2] < vLow)
+                    frameIndex = i * frame->widthStep + j * frame->nChannels;
+                    ballIndex = i * ballImage->widthStep + j * ballImage->nChannels;
+
+                    if (((uchar)frame->imageData[frameIndex] >= 240 ||
+                        (uchar)frame->imageData[frameIndex] <= 20) &&
+                        (uchar)frame->imageData[frameIndex+1] >= 100 &&
+                        (uchar)frame->imageData[frameIndex+1] <= 255) //&&
+                        //frame->imageData[index+2] > vLow &&
+                        //frame->imageData[index+2] < vLow)
                     {
-                        ballImage->imageData[index] = 255;
+                        ballImage->imageData[ballIndex] = 255;
                     }
                 }
             }
-
-
-            cout << "After filtering " << clock() << endl;
             cvShowImage("Intermediate", ballImage);
 
 
             // Get contours in the image
             CvSeq* contours = NULL;
-            cvFindContours(ballImage, contourStorage, &contours, sizeof(CvContour), CV_RETR_EXTERNAL);
+            cvFindContours(ballImage, contourStorage, &contours);//, sizeof(CvContour), CV_RETR_EXTERNAL);
             // Show it!
-            cout << "After finding contours " << clock() << endl;
 
             // Process contours with fit ellipse
             int width, height, numPoints;
@@ -373,15 +363,14 @@ class ImageProcessing
                 }
                 else
                 {
-                    avgCircleR = ellipseBound.size.width > ellipseBound.size.height ?
+                    avgCircleR = ellipseBound.size.width < ellipseBound.size.height ?
                                  ellipseBound.size.width : ellipseBound.size.height;
                 }
                 cvEllipse(ellipseImage, cvPoint(ellipseBound.center.x, ellipseBound.center.y), cvSize(avgCircleR/2, avgCircleR/2), -ellipseBound.angle, 0, 360, CV_RGB(0, 0, 0xff));
                 balls.push_back(Ball(1000/avgCircleR, ((ellipseBound.center.x/contourImage->width) - 0.5) * FOV));
             }
-            cvShowImage("Ellipse", contourImage);
+            cvShowImage("Ellipse", ellipseImage);
 
-            cout << "After ellipse processing " << clock() << endl;
 
             // Process contours with a houghTransform - REDACTED!
             /*
@@ -394,15 +383,12 @@ class ImageProcessing
                 cvCircle(ellipseImage, pt, cvRound(p[2]), CV_RGB(0xff, 0, 0));
             }
 
-            cout << "After hough processing " << clock() << endl;
-
             cvShowImage("Output", ellipseImage);
             */
 
             // We need to pause a little each frame to make sure it doesn't
             // break
             cvWaitKey(10);
-            cout << "End process balls " << clock() << endl;
         }
         int getNumBalls()
         {
