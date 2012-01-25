@@ -5431,6 +5431,326 @@ ByLayer
  40
 0.08
   0
+CIRCLE
+  5
+D8
+100
+AcDbEntity
+100
+AcDbCircle
+  8
+0
+ 62
+256
+370
+-1
+  6
+ByLayer
+ 10
+-3.25
+ 20
+0.595
+ 30
+0.0
+ 40
+0.0615
+  0
+CIRCLE
+  5
+D9
+100
+AcDbEntity
+100
+AcDbCircle
+  8
+0
+ 62
+256
+370
+-1
+  6
+ByLayer
+ 10
+-3.25
+ 20
+-0.595
+ 30
+0.0
+ 40
+0.0615
+  0
+CIRCLE
+  5
+DA
+100
+AcDbEntity
+100
+AcDbCircle
+  8
+0
+ 62
+256
+370
+-1
+  6
+ByLayer
+ 10
+3.25
+ 20
+0.595
+ 30
+0.0
+ 40
+0.0615
+  0
+CIRCLE
+  5
+DB
+100
+AcDbEntity
+100
+AcDbCircle
+  8
+0
+ 62
+256
+370
+-1
+  6
+ByLayer
+ 10
+3.25
+ 20
+-0.595
+ 30
+0.0
+ 40
+0.0615
+  0
+LINE
+  5
+DC
+100
+AcDbEntity
+100
+AcDbLine
+  8
+0
+ 62
+256
+370
+-1
+  6
+ByLayer
+ 10
+-3.5499999999999998
+ 20
+-2.0
+ 30
+0.0
+ 11
+-3.5499999999999994
+ 21
+2.0
+ 31
+0.0
+  0
+LINE
+  5
+DD
+100
+AcDbEntity
+100
+AcDbLine
+  8
+0
+ 62
+256
+370
+-1
+  6
+ByLayer
+ 10
+3.5499999999999998
+ 20
+-2.0
+ 30
+0.0
+ 11
+3.5500000000000003
+ 21
+2.0
+ 31
+0.0
+  0
+LINE
+  5
+DE
+100
+AcDbEntity
+100
+AcDbLine
+  8
+0
+ 62
+256
+370
+-1
+  6
+ByLayer
+ 10
+3.5500000000000003
+ 20
+2.0
+ 30
+0.0
+ 11
+4.0500000000000007
+ 21
+2.0
+ 31
+0.0
+  0
+LINE
+  5
+DF
+100
+AcDbEntity
+100
+AcDbLine
+  8
+0
+ 62
+256
+370
+-1
+  6
+ByLayer
+ 10
+3.5499999999999998
+ 20
+-2.0
+ 30
+0.0
+ 11
+4.0499999999999998
+ 21
+-2.0
+ 31
+0.0
+  0
+LINE
+  5
+E0
+100
+AcDbEntity
+100
+AcDbLine
+  8
+0
+ 62
+256
+370
+-1
+  6
+ByLayer
+ 10
+-3.5499999999999994
+ 20
+2.0
+ 30
+0.0
+ 11
+-4.0499999999999989
+ 21
+2.0
+ 31
+0.0
+  0
+LINE
+  5
+E1
+100
+AcDbEntity
+100
+AcDbLine
+  8
+0
+ 62
+256
+370
+-1
+  6
+ByLayer
+ 10
+-3.5499999999999998
+ 20
+-2.0
+ 30
+0.0
+ 11
+-4.0499999999999998
+ 21
+-2.0
+ 31
+0.0
+  0
+LINE
+  5
+E2
+100
+AcDbEntity
+100
+AcDbLine
+  8
+0
+ 62
+256
+370
+-1
+  6
+ByLayer
+ 10
+-4.0499999999999998
+ 20
+-2.0
+ 30
+0.0
+ 11
+-4.0499999999999989
+ 21
+2.0
+ 31
+0.0
+  0
+LINE
+  5
+E3
+100
+AcDbEntity
+100
+AcDbLine
+  8
+0
+ 62
+256
+370
+-1
+  6
+ByLayer
+ 10
+4.0499999999999998
+ 20
+-2.0
+ 30
+0.0
+ 11
+4.0500000000000007
+ 21
+2.0
+ 31
+0.0
+  0
 ENDSEC
   0
 SECTION
@@ -5469,7 +5789,7 @@ E
   3
 AcDbVariableDictionary
 350
-D8
+E4
   0
 DICTIONARY
   5
@@ -5933,7 +6253,7 @@ Layout2
   0
 DICTIONARY
   5
-D8
+E4
 100
 AcDbDictionary
 281
@@ -5941,15 +6261,15 @@ AcDbDictionary
   3
 DIMASSOC
 350
-DA
+E6
   3
 HIDETEXT
 350
-D9
+E5
   0
 DICTIONARYVAR
   5
-D9
+E5
 100
 DictionaryVariables
 280
@@ -5959,7 +6279,7 @@ DictionaryVariables
   0
 DICTIONARYVAR
   5
-DA
+E6
 100
 DictionaryVariables
 280
