@@ -64,7 +64,7 @@ class Ball
 };
 struct ColorHSV
 {
-    float h,s,v;
+    uchar h,s,v;
 };
 
 class ImageProcessing
@@ -87,7 +87,12 @@ class ImageProcessing
         bool ranIntoWall;
         struct ColorHSV hsvArray[256][256][256];
         // Declare thresholds
-        uchar hHigh, hLow, sHigh, sLow, vHigh, vLow;
+        uchar hHigh;
+        uchar hLow;
+        uchar sHigh;
+        uchar sLow;
+	uchar vHigh;
+	uchar vLow;
 
         ImageProcessing()
         {
@@ -109,6 +114,13 @@ class ImageProcessing
             contourStorage = cvCreateMemStorage(0);
             houghStorage = cvCreateMemStorage(0);
             pointStorage = cvCreateMemStorage(0);
+	    
+	    hHigh = 240;
+	    hLow = 20;
+	    sHigh = 255;
+	    sLow = 100;
+	    vHigh = 255;
+	    vLow = 0;
 
             // Make some windows
             cvNamedWindow("Original", CV_WINDOW_AUTOSIZE);
@@ -133,23 +145,29 @@ class ImageProcessing
         // HSV conversion functions
         void loadHSVArray()
         {
-       	    ifstream hsvFile ("hsvSerial");
-	    char in;
+       	    ifstream hsvFile ("vision/hsvSerial");
+            if (!hsvFile)
+            {
+                cout << "File input failed!" << endl;
+                return;
+            }
+	    else
+	    {
+	      cout << "File input success!" << endl;
+	    }
+	    uchar in;
 	    for ( int i = 0; i <= 255; i++ )
 	    {
 		for ( int j = 0; j <= 255; j++ )
 		{
 		    for ( int k = 0; k <= 255; k++ )
 		    {
-			hsvFile >> in;
-			hsvArray[i][j][k].h = in;
-			hsvFile >> in;
-			hsvArray[i][j][k].s = in;
-			hsvFile >> in;
-			hsvArray[i][j][k].v = in;
-                        if (i == 255 && j == 255 && k == 255)
+			hsvArray[i][j][k].h = hsvFile.get();		
+			hsvArray[i][j][k].s = hsvFile.get();
+			hsvArray[i][j][k].v = hsvFile.get();
+                        if (i == 1 && j == 0 && k == 0)
                         {
-                            cout << "hue" << hsvArray[i][j][k].h << endl;
+			  cout << "CHECK0" << (int)hsvArray[i][j][k].h << " " << (int)hsvArray[i][j][k].s << " " <<(int) hsvArray[i][j][k].v << endl;
                         }
 		    }
 		}
@@ -157,9 +175,9 @@ class ImageProcessing
 
             cout << "HSV array loaded" << endl;
 	}
-        ColorHSV convertToHSV( uchar b, uchar g, uchar r )
+        ColorHSV* convertToHSV( uchar b, uchar g, uchar r )
         {
-	    return hsvArray[r][g][b];
+	    return &(hsvArray[r][g][b]);
 	}
 
 
@@ -255,15 +273,16 @@ class ImageProcessing
                 for (int j = 0; j < frame->width; j++)
                 {
                     index = i * frame->widthStep + j * frame->nChannels;
-                    hsvVal = &(convertToHSV(frame->imageData[index], frame->imageData[index+1], frame->imageData[index+2]));
+                    hsvVal = convertToHSV(frame->imageData[index], frame->imageData[index+1], frame->imageData[index+2]);
                     frame->imageData[index] = hsvVal->h;
                     frame->imageData[index+1] = hsvVal->s;
                     frame->imageData[index+2] = hsvVal->v;
                 }
             }
-            cout << convertToHSV(255, 0, 0).h << " " << convertToHSV(255, 0, 0).s << " " << convertToHSV(255, 0, 0).v << endl;
+            cout << "CHECK" << convertToHSV(255, 0, 0)->h << " " << convertToHSV(255, 0, 0)->s << " " << convertToHSV(255, 0, 0)->v << endl;
+            cvSplit(frame, NULL, NULL, contourImage, NULL);
             // Show it
-            cvShowImage("Int2", frame);
+            cvShowImage("Int2", contourImage);
 
             // Output hue - REDACTED!
             /*
