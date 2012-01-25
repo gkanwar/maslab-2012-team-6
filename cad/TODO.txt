@@ -5,7 +5,6 @@
     *Mount Eee PC, Arduino, Battery, On Button
 
 *Make:
-    *Encoder Disks
     *Rails
 
 *Rails:
@@ -17,8 +16,6 @@
     *Make sure the sides interface with braces correctly.
 
 *Base:
-    *Copy interface with side
-    *Add interface with cross braces
     *Add encoder sensor mounts
     *Switch holes
 
