@@ -8,9 +8,12 @@ class ControlBlargh(Blargh):
     
     def __init__(self, arduinoInterface):
         self.arduinoInterface = arduinoInterface
-        self.angleThreshold = pi / 12
+        self.angleThreshold = pi / 16
         self.driveThreshold = .3
-        self.anglePID = PID((1,0,0))
+        # Old values
+        #self.anglePID = PID((1,0,0))
+        #self.drivePID = PID((.04,0,0))
+        self.anglePID = PID((5,0,0))
         self.drivePID = PID((.04,0,0))
         self.goal = None
     STATE_CHANGE_FLAG = 0

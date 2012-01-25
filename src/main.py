@@ -8,6 +8,7 @@ from vision import VisionBlargh
 from world import WorldBlargh
 from behavior import BehaviorBlargh
 from control import ControlBlargh
+from input import InputBlargh
 
 from arduino import createArduinoInterface, ArduinoInterfaceWrapper
 
@@ -40,13 +41,14 @@ if __name__ == "__main__":
     world = BlarghProcessStarter( WorldBlargh, [], True) #Async for Odometry purposes.
     behavior = BlarghProcessStarter( BehaviorBlargh, [], True) #Async because this has timeouts, etc.
     control = BlarghProcessStarter( ControlBlargh, [arduinoControlWrapper], True )
+    input = BlarghProcessStarter( InputBlargh, [arduinoInputWrapper], True )
 
     cascadeBlarghProcesses(vision, world)
     cascadeBlarghProcesses(world, behavior)
     cascadeBlarghProcesses(behavior, control)
-
-    #Start Everything, and store it in a list.
-    processes = [ vision.start(), world.start(), behavior.start(), control.start() ]
+    cascadeBlarghProcesses(input, world);
+    #Start Everything, and store it in a ist.
+    processes = [ vision.start(), world.start(), behavior.start(), control.start(), input.start() ]
 
     # TODO: Main timer loop, kill all processes when time runs out
     startTime = time.time()
