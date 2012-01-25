@@ -2,6 +2,11 @@
     * Import all other parts and do prelim stuff.
     *Change all screw mounts and holes based on empirical cutter measurments
     *Change interior lines to mounts in all files
+    *Mount Eee PC, Arduino, Battery, On Button
+
+*Make:
+    *Rails
+
 *Rails:
     *Make rails from sides
     *Modify back brace interface.
@@ -13,8 +18,8 @@
 *Base:
     *Copy interface with side
     *Add interface with cross braces
-    *Add wheel holes
-    *Add sensor mounts
+    *Add encoder sensor mounts
+    *Switch holes
 
 
 * Make sure the back IR/ Button both fit
