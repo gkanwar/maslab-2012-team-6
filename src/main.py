@@ -9,7 +9,7 @@ from world import WorldBlargh
 from behavior import BehaviorBlargh
 from control import ControlBlargh
 
-from arduino import createArduinoInterface, ArduinoInterfaceInputWrapper, ArduinoInterfaceOutputWrapper
+from arduino import createArduinoInterface, ArduinoInterfaceWrapper
 
 # This is the master process, it should control everything. It's also
 # what should get called to run this whole thing.
@@ -17,9 +17,9 @@ from arduino import createArduinoInterface, ArduinoInterfaceInputWrapper, Arduin
 if __name__ == "__main__":
 
     # Create the arduino interface
-    masterConn, inputConn, outputConn = createArduinoInterface()
-    arduinoInterfaceInputWrapper = ArduinoInterfaceInputWrapper(inputConn)
-    arduinoInterfaceOutputWrapper = ArduinoInterfaceOutputWrapper(outputConn)
+    masterConn, inputConn, controlConn = createArduinoInterface(3)
+    arduinoInputWrapper = ArduinoInterfaceWrapper(inputConn)
+    arduinoControlWrapper = ArduinoInterfaceWrapper(controlConn)
 
     '''
     Example for creating blargh structure:
@@ -39,7 +39,7 @@ if __name__ == "__main__":
     vision = BlarghProcessStarter( VisionBlargh, [], True )
     world = BlarghProcessStarter( WorldBlargh, [], True) #Async for Odometry purposes.
     behavior = BlarghProcessStarter( BehaviorBlargh, [], True) #Async because this has timeouts, etc.
-    control = BlarghProcessStarter( ControlBlargh, [arduinoInterfaceOutputWrapper], True )
+    control = BlarghProcessStarter( ControlBlargh, [arduinoControlWrapper], True )
 
     cascadeBlarghProcesses(vision, world)
     cascadeBlarghProcesses(world, behavior)
