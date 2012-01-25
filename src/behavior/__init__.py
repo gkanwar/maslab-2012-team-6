@@ -185,7 +185,7 @@ class StateMachine:
         self.goal = STATE_CHANGE_FLAG
 
     def step( self ):
-        #print "State:",self.state
+        print "State:",self.state
         self.state, self.goal = self.state.step()
 
         
