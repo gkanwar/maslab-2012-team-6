@@ -175,9 +175,9 @@ class ImageProcessing
 
             cout << "HSV array loaded" << endl;
 	}
-        ColorHSV convertToHSV( uchar b, uchar g, uchar r )
+        ColorHSV* convertToHSV( uchar b, uchar g, uchar r )
         {
-	    return hsvArray[r][g][b];
+	    return &(hsvArray[r][g][b]);
 	}
 
 
@@ -273,14 +273,14 @@ class ImageProcessing
                 for (int j = 0; j < frame->width; j++)
                 {
                     index = i * frame->widthStep + j * frame->nChannels;
-                    hsvVal = &(convertToHSV(frame->imageData[index], frame->imageData[index+1], frame->imageData[index+2]));
+                    hsvVal = convertToHSV(frame->imageData[index], frame->imageData[index+1], frame->imageData[index+2]);
                     frame->imageData[index] = hsvVal->h;
                     frame->imageData[index+1] = hsvVal->s;
                     frame->imageData[index+2] = hsvVal->v;
                 }
             }
-            cout << "CHECK" << convertToHSV(255, 0, 0).h << " " << convertToHSV(255, 0, 0).s << " " << convertToHSV(255, 0, 0).v << endl;
-            cvSplit(frame, NULL,NULL,contourImage, NULL);
+            cout << "CHECK" << convertToHSV(255, 0, 0)->h << " " << convertToHSV(255, 0, 0)->s << " " << convertToHSV(255, 0, 0)->v << endl;
+            cvSplit(frame, NULL, NULL, contourImage, NULL);
             // Show it
             cvShowImage("Int2", contourImage);
 
