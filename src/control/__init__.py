@@ -10,8 +10,8 @@ class ControlBlargh(Blargh):
         self.arduinoInterface = arduinoInterface
         self.angleThreshold = pi / 12
         self.driveThreshold = .3
-        self.anglePID = PID((20,20,0))
-        self.drivePID = PID((.15,0,0))
+        self.anglePID = PID((1,0,0))
+        self.drivePID = PID((.04,0,0))
         self.goal = None
     STATE_CHANGE_FLAG = 0
     def step(self, goal):

@@ -64,7 +64,7 @@ class DriveStraightState( State ):
         if world. time > 179:
             return DeadState(), STATE_CHANGE_FLAG
 
-        goal = ( 5, 0 )
+        goal = ( 20, 0 )
         
         # Update the state.
 
@@ -95,7 +95,7 @@ class TurnState( State ):
         if world. time > 179:
             return DeadState(), STATE_CHANGE_FLAG
 
-        goal = ( 0, pi / 2 )
+        goal = ( 0, pi / 6 )
 
         
         # Update the state.
@@ -156,7 +156,7 @@ class AquireBallState( State ):
         if world. time > 179:
             return DeadState(), STATE_CHANGE_FLAG
 
-        goal = ( 5, 0 )
+        goal = ( 10, 0 )
 
         
         #Update the state.
