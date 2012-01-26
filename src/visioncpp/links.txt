@@ -1,0 +1,27 @@
+Edge detection:
+http://dasl.mem.drexel.edu/~noahKuntz/openCVTut5.html#Step%201
+http://opencv.willowgarage.com/documentation/python/imgproc_feature_detection.html
+http://silveiraneto.net/2009/12/04/opencv-edge-detection/
+
+Pyr Segmentation:
+http://www710.univ-lyon1.fr/~bouakaz/OpenCV-0.9.5/docs/ref/OpenCVRef_ImageProcessing.htm#decl_cvPyrSegmentation
+http://opencv.willowgarage.com/documentation/python/miscellaneous_image_transformations.html
+
+Threshold:
+http://opencv.willowgarage.com/documentation/python/miscellaneous_image_transformations.html
+
+Blob Filtering:
+http://opencv.willowgarage.com/wiki/cvBlobsLib
+
+Useful functions:
+    Contour-related:
+    cv::findContours
+    cv::contourArea
+    cv::fitEllipse
+    cv::minEnclosingCircle
+
+    Color-filtering-related:
+    cv::threshold
+
+    Noise-reduction-related:
+    cv::blur

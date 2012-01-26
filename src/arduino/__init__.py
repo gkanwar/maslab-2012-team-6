@@ -4,61 +4,58 @@ from exceptions import ValueError
 from multiprocessing import Pipe, Process
 import time
 
-def arduinoInterface(masterConn, inputConn, outputConn, arduinoWrapper):
+def arduinoInterface(pipes, arduinoWrapper):
 
     # Start the arduino wrapper
     arduinoWrapper.start()
 
     # Input from inputConn or outputConn should be a (cmd, arg) tuple
-    def handleCommand(conn):
-        cmd, arg = conn.recv()
+    def handleCommand(pipe):
+        cmd, arg = pipe.recv()
         if (cmd == "IR"):
             # Send back the IR distance
-            conn.send(arduinoWrapper.getIRSensorDist(arg))
+            pipe.send(arduinoWrapper.getIRSensorDist(arg))
         elif (cmd == "BUMP"):
             # Send back whether the bump sensor was hit or not
-            conn.send(arduinoWrapper.getBumpSensorHit(arg))
+            pipe.send(arduinoWrapper.getBumpSensorHit(arg))
         elif (cmd == "MOTOR"):
             motorNum, speed = arg
             # Set the motor speed via the wrapper
             arduinoWrapper.setMotorSpeed(motorNum, speed)
-            conn.send("DONE")
+            print "Setting motor speed", motorNum, speed
+            pipe.send("DONE")
         elif (cmd == "SERVO"):
             servoNum, angle = arg
             # Set the servo angle via the wrapper
             arduinoWrapper.setServoAngle(servoNum, angle)
-            conn.send("DONE")
+            pipe.send("DONE")
         else:
             # Raise a value error, because none of the possible inputs
             # were matched
             raise ValueError
 
     while True:
-        if (masterConn.poll()):
-            inp = masterConn.recv()
-            if (inp == "KILL"):
+        for pipe in pipes:
+            if pipe.poll() and handleCommand(pipe) == "KILL":
                 return 0
-            else:
-                raise ValueError
-        if (inputConn.poll()):
-            handleCommand(inputConn)
-        if (outputConn.poll()):
-            handleCommand(outputConn)
 
 # Called from the master process to create the arduino interface process
-def createArduinoInterface():
-    inputChildConn, inputParentConn = Pipe()
-    outputChildConn, outputParentConn = Pipe()
-    masterChildConn, masterParentConn = Pipe()
+def createArduinoInterface(numPipes):
+    parentPipes = []
+    childPipes = []
+    for i in range(numPipes):
+        parentPipe, childPipe = Pipe()
+        parentPipes.append(parentPipe)
+        childPipes.append(childPipe)
 
     arduinoWrapper = ArduinoWrapper()
 
-    proc = Process(target = arduinoInterface, args = (masterChildConn, inputChildConn, outputChildConn, arduinoWrapper))
+    proc = Process(target = arduinoInterface, args = [childPipes, arduinoWrapper])
     proc.start()
 
-    return (masterParentConn, inputParentConn, outputParentConn)
+    return parentPipes
 
-class ArduinoInterfaceInputWrapper():
+class ArduinoInterfaceWrapper():
     def __init__(self, conn):
         self.conn = conn
 
@@ -69,10 +66,6 @@ class ArduinoInterfaceInputWrapper():
     def getBumpHit(self, bumpNum):
         self.conn.send(("BUMP", bumpNum))
         return self.conn.recv()
-
-class ArduinoInterfaceOutputWrapper():
-    def __init__(self, conn):
-        self.conn = conn
 
     def setMotorSpeed(self, motorNum, speed):
         self.conn.send(("MOTOR", (motorNum, speed)))

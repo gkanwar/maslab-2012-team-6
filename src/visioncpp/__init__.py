@@ -4,16 +4,16 @@ from vision import Vision
 # Eventually should take in vision data and process it
 class VisionBlargh(Blargh):
     def __init__(self):
-        # Initialize the Vision object
+        # Initialize the Vision wrapper class for the vision library
         self.vision = Vision()
 
     def step(self, inp):
-        # TODO: Handle walls
+        # TODO: Handle more than one ball; handle walls
         # Update the frame
-        self.vision.processBalls()
+        self.vision.bar()
         # If there is more than 0 balls, then return the location of the first
         # ball-blob
-        ballList = []
-        for i in range(self.vision.getNumBalls()):
-            ballList.append((self.vision.getR(i), self.vision.getTheta(i)))
-        return (0,ballList)
+        if (self.vision.getNumBalls() > 0):
+            return (self.vision.getR(0), self.vision.getTheta(0))
+        else:
+            return None

@@ -123,10 +123,10 @@ class ImageProcessing
 	    vLow = 0;
 
             // Make some windows
-            cvNamedWindow("Original", CV_WINDOW_AUTOSIZE);
-            cvNamedWindow("Output", CV_WINDOW_AUTOSIZE);
-            cvNamedWindow("Intermediate", CV_WINDOW_AUTOSIZE);
-            cvNamedWindow("Int2", CV_WINDOW_AUTOSIZE);
+            //cvNamedWindow("Original", CV_WINDOW_AUTOSIZE);
+            //cvNamedWindow("Output", CV_WINDOW_AUTOSIZE);
+            //cvNamedWindow("Intermediate", CV_WINDOW_AUTOSIZE);
+            //cvNamedWindow("Int2", CV_WINDOW_AUTOSIZE);
             cvNamedWindow("Ellipse", CV_WINDOW_AUTOSIZE);
 
             // Load the HSV array from memory
@@ -183,7 +183,7 @@ class ImageProcessing
             cvPyrDown(largeFrame, frame);
 
             // Display it
-            cvShowImage("Original", frame);
+            //cvShowImage("Original", frame);
 
             // Remove noise by blurring - REDACTED!
             /*
@@ -273,7 +273,7 @@ class ImageProcessing
             }
             cvSplit(frame, contourImage, NULL, NULL, NULL);
             // Show it
-            cvShowImage("Int2", contourImage);
+            //cvShowImage("Int2", contourImage);
 
             // Output hue - REDACTED!
             /*
@@ -328,7 +328,7 @@ class ImageProcessing
                     }
                 }
             }
-            cvShowImage("Intermediate", ballImage);
+            //cvShowImage("Intermediate", ballImage);
 
 
             // Get contours in the image
