@@ -37,24 +37,18 @@ if __name__ == "__main__":
     step b3.
     '''
     #Create the structure for checkpoint 4.
+    input = BlarghProcessStarter( InputBlargh, [arduinoInputWrapper], True )
     vision = BlarghProcessStarter( VisionBlargh, [], True )
     world = BlarghProcessStarter( WorldBlargh, [], True) #Async for Odometry purposes.
     behavior = BlarghProcessStarter( BehaviorBlargh, [], True) #Async because this has timeouts, etc.
     control = BlarghProcessStarter( ControlBlargh, [arduinoControlWrapper], True )
-    input = BlarghProcessStarter( InputBlargh, [arduinoInputWrapper], True )
 
+    cascadeBlarghProcesses(input, world);
     cascadeBlarghProcesses(vision, world)
     cascadeBlarghProcesses(world, behavior)
     cascadeBlarghProcesses(behavior, control)
-    cascadeBlarghProcesses(input, world);
     #Start Everything, and store it in a ist.
-    processes = [ vision.start(), world.start(), behavior.start(), control.start(), input.start() ]
+    processes = [input.start(), vision.start(), world.start(), behavior.start(), control.start()]
 
-    # TODO: Main timer loop, kill all processes when time runs out
-    startTime = time.time()
-    while time.time() - startTime < 3 * 60:
-        time.sleep(0.5)
-
-    print "Killing Everything!"
-    killAllBlarghProcesses( processes )
-    masterConn.send("KILL")
+    # Wait for everything else to die before quitting
+    joinAllBlarghProcesses(processes)

@@ -62,6 +62,11 @@ def killAllBlarghProcesses(blarghMasters):
         print "BlarghMaster", blarghMaster, "joining"
         blarghMaster.proc.join()
 
+# Join all blargh processes
+def joinAllBlarghProcesses(blarghMasters):
+    for blarghMaster in blarghMasters:
+        blarghMaster.proc.join()
+
 # Called from the master process to send the correct signals to cascade
 # two blargh processes together. Accepts two BlarghProcessStarters and
 # sets up their inPipes and outPipes so that they are connected

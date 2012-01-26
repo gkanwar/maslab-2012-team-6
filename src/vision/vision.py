@@ -3,7 +3,7 @@ from ctypes import *
 import os
 visionlib = cdll.LoadLibrary(os.path.dirname(os.path.abspath(__file__)) + '/libvision.so')
 # Set the return types
-visionlib.createObj.restype = c_int
+visionlib.init.restype = c_int
 visionlib.processBalls.restype = c_int
 visionlib.getR.restype = c_float
 visionlib.getTheta.restype = c_float
@@ -12,19 +12,21 @@ visionlib.getTheta.restype = c_float
 class Vision(object):
     # Create the ImageProcessing object in C++
     def __init__(self):
-        self.obj = visionlib.createObj()
+        visionlib.init()
+        import time
+        time.sleep(1)
     # Process a frame in C++
     def processBalls(self):
-        visionlib.processBalls(self.obj)
+        visionlib.processBalls()
     # Get the number of balls found
     def getNumBalls(self):
-        return visionlib.getNumBalls(self.obj)
+        return visionlib.getNumBalls()
     # Get the r for a specific ball found
     def getR(self, index):
-        return visionlib.getR(self.obj, index)
+        return visionlib.getR(index)
     # Get the theta for a specific ball found
     def getTheta(self, index):
-        return visionlib.getTheta(self.obj, index)
+        return visionlib.getTheta(index)
 
 
 # Example code

@@ -83,7 +83,7 @@ class ImageProcessing
         CvMemStorage* houghStorage;
         CvMemStorage* pointStorage;
         // Declare a vector of balls
-        vector<Ball> balls;
+        vector<Ball*> balls;
         bool ranIntoWall;
         struct ColorHSV hsvArray[256][256][256];
         // Declare thresholds
@@ -93,9 +93,11 @@ class ImageProcessing
         uchar sLow;
 	uchar vHigh;
 	uchar vLow;
+        int i;
 
         ImageProcessing()
         {
+            i = 0;
             // Set up the capture
             capture = cvCaptureFromCAM(CAMERA_NUM);
             // Set up the frame
@@ -123,7 +125,7 @@ class ImageProcessing
 	    vLow = 0;
 
             // Make some windows
-            //cvNamedWindow("Original", CV_WINDOW_AUTOSIZE);
+            cvNamedWindow("Original", CV_WINDOW_AUTOSIZE);
             //cvNamedWindow("Output", CV_WINDOW_AUTOSIZE);
             //cvNamedWindow("Intermediate", CV_WINDOW_AUTOSIZE);
             //cvNamedWindow("Int2", CV_WINDOW_AUTOSIZE);
@@ -134,6 +136,7 @@ class ImageProcessing
 
             pthread_create(&frameCapture, NULL, frameCaptureThread, NULL);
             ranIntoWall = false;
+            cout << "End constructor: " << balls.size() << " " << &balls << endl;
         }
 
         ~ImageProcessing()
@@ -162,7 +165,7 @@ class ImageProcessing
 		{
 		    for ( int k = 0; k <= 255; k++ )
 		    {
-			hsvArray[i][j][k].h = hsvFile.get();		
+			hsvArray[i][j][k].h = hsvFile.get();
 			hsvArray[i][j][k].s = hsvFile.get();
 			hsvArray[i][j][k].v = hsvFile.get();
 		    }
@@ -177,9 +180,15 @@ class ImageProcessing
 
         void processBalls()
         {
+            cout << "Begin process balls" << endl << flush;
             int index;
 
             // Shrink the frame
+            if (i > 0)
+            {
+                 cvZero(largeFrame);
+                 i--;
+            }
             cvPyrDown(largeFrame, frame);
 
             // Display it
@@ -258,6 +267,7 @@ class ImageProcessing
             cvShowImage("Int2", normalized);
             */
 
+            cout << "Convert to HSV" << endl << flush;
             // Convert to HSV space
             struct ColorHSV* hsvVal;
             for (int i = 0; i < frame->height; i++)
@@ -307,6 +317,7 @@ class ImageProcessing
             }
             */
 
+            cout << "Filter image" << endl << flush;
             // Filter image using HSV values
             cvZero(ballImage);
             int frameIndex, ballIndex;
@@ -330,15 +341,19 @@ class ImageProcessing
             }
             //cvShowImage("Intermediate", ballImage);
 
+            cout << "Find contours" << endl << flush;
 
             // Get contours in the image
             CvSeq* contours = NULL;
             cvFindContours(ballImage, contourStorage, &contours);//, sizeof(CvContour), CV_RETR_EXTERNAL);
             // Show it!
 
+
+            cout << "Before process contours" << endl << flush;
             // Process contours with fit ellipse
             int width, height, numPoints;
             float avgCircleR; // Should be D, but whatever
+            Ball* tempBall;
             cvZero(ellipseImage);
             cvZero(contourImage);
             CvBox2D ellipseBound;
@@ -367,10 +382,11 @@ class ImageProcessing
                                  ellipseBound.size.width : ellipseBound.size.height;
                 }
                 cvEllipse(ellipseImage, cvPoint(ellipseBound.center.x, ellipseBound.center.y), cvSize(avgCircleR/2, avgCircleR/2), -ellipseBound.angle, 0, 360, CV_RGB(0, 0, 0xff));
-                balls.push_back(Ball(1000/avgCircleR, ((ellipseBound.center.x/contourImage->width) - 0.5) * FOV));
+                tempBall = (Ball*) new Ball(1000/avgCircleR, ((ellipseBound.center.x/contourImage->width) - 0.5) * FOV);
+                balls.push_back(tempBall);
             }
             cvShowImage("Ellipse", ellipseImage);
-
+            cout << "After process contours" << endl << flush;
 
             // Process contours with a houghTransform - REDACTED!
             /*
@@ -392,41 +408,45 @@ class ImageProcessing
         }
         int getNumBalls()
         {
+            cout << "getNumBalls: " << &balls << endl << flush;
             return balls.size();
         }
         float getR(int index)
         {
-            return balls[index].r;
+            cout << "getR" << endl << flush;
+            return balls[index]->r;
         }
         float getTheta(int index)
         {
-            return balls[index].theta;
+            cout << "getTheta" << endl << flush;
+            return balls[index]->theta;
         }
 };
 
 extern "C"
 {
-    ImageProcessing* createObj()
+    ImageProcessing* ip;
+    void init()
     {
-        return new ImageProcessing();
+        ip = new ImageProcessing();
     }
-    void deleteObj(ImageProcessing* ip)
+    void deinit()
     {
         delete ip;
     }
-    void processBalls(ImageProcessing* ip)
+    void processBalls()
     {
         ip->processBalls();
     }
-    int getNumBalls(ImageProcessing* ip)
+    int getNumBalls()
     {
         return ip->getNumBalls();
     }
-    float getR(ImageProcessing* ip, int index)
+    float getR(int index)
     {
         return ip->getR(index);
     }
-    float getTheta(ImageProcessing* ip, int index)
+    float getTheta(int index)
     {
         return ip->getTheta(index);
     }
