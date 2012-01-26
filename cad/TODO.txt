@@ -1,19 +1,8 @@
 *Everything:
-    *Change interior lines to mounts in all files
     *Mount Eee PC, Arduino, Battery, On Button
 
-*Make:
-    *Rails
-
 *Rails:
-    *Make rails from side.dxf
-    *Modify back brace interface.
     *Make sure that the rail interfaces with the braces correctly.
 
 *Sides:
     *Make sure the sides interface with braces correctly.
-
-*Base:
-    *Add encoder sensor mounts
-    *Add switch holes
-    *Add roller motor holes
