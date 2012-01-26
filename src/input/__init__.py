@@ -14,12 +14,12 @@ class InputBlargh(Blargh):
         print "InputBlargh: stepped"
         bumpData = BumpSensorData()
         irData = IRData()
-        bumpData.left = ardInWrapper.getBumpHit(0)
-        bumpData.right= ardInWrapper.getBumpHit(1)
-        bumpData.back = ardInWrapper.getBumpHit(2)
+        bumpData.left = self.ardInWrapper.getBumpHit(0)
+        bumpData.right= self.ardInWrapper.getBumpHit(1)
+        print "BumpData:", bumpData.left
+        print "BumpData:", bumpData.right
         
-        irData.front = getIRDist(0)
-        print "InputBlargh: got output", out
+        print "InputBlargh: got output"
         return (1,(bumpData, irData))
 
 class BumpSensorData():

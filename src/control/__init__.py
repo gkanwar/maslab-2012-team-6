@@ -13,9 +13,10 @@ class ControlBlargh(Blargh):
         # Old values
         #self.anglePID = PID((1,0,0))
         #self.drivePID = PID((.04,0,0))
-        self.anglePID = PID((5,0,0))
-        self.drivePID = PID((.04,0,0))
+        self.anglePID = PID((2,0,0))
+        self.drivePID = PID((.02,0,0))
         self.goal = None
+        self.maxMotorSpeed = 0.6
     STATE_CHANGE_FLAG = 0
     def step(self, goal):
         if not goal == None:
@@ -45,17 +46,17 @@ class ControlBlargh(Blargh):
                 #HACK - ?
                 aval = self.anglePID.update(theta)
                 dval = self.drivePID.update(r)
-                if(aval + dval >=1):
-                    self.arduinoInterface.setMotorSpeed(0, 1)
-                elif(aval + dval <=-1):
-                    self.arduinoInterface.setMotorSpeed(0, -1)
+                if(aval + dval >= self.maxMotorSpeed):
+                    self.arduinoInterface.setMotorSpeed(0, self.maxMotorSpeed)
+                elif(aval + dval <=-self.maxMotorSpeed):
+                    self.arduinoInterface.setMotorSpeed(0, -self.maxMotorSpeed)
                 else:
                     self.arduinoInterface.setMotorSpeed(0, aval + dval)
                     
-                if(dval - aval >=1):
-                    self.arduinoInterface.setMotorSpeed(1, 1)
-                elif(dval - aval <=-1):
-                    self.arduinoInterface.setMotorSpeed(1, -1)
+                if(dval - aval >= self.maxMotorSpeed):
+                    self.arduinoInterface.setMotorSpeed(1, self.maxMotorSpeed)
+                elif(dval - aval <=-self.maxMotorSpeed):
+                    self.arduinoInterface.setMotorSpeed(1, -self.maxMotorSpeed)
                 else:
                     self.arduinoInterface.setMotorSpeed(1, dval - aval)
 

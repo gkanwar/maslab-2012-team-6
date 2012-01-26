@@ -22,7 +22,7 @@ def arduinoInterface(pipes, arduinoWrapper):
             motorNum, speed = arg
             # Set the motor speed via the wrapper
             arduinoWrapper.setMotorSpeed(motorNum, speed)
-            print "Setting motor speed", motorNum, speed
+            #print "Setting motor speed", motorNum, speed
             pipe.send("DONE")
         elif (cmd == "SERVO"):
             servoNum, angle = arg

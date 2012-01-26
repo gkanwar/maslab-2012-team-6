@@ -3,7 +3,7 @@ import time
 
 #This object will be passed on to the BehaviorBlargh. It describes the state of the world around the robot.
 class World:
-    def __init__( self, balls, irData, bumpData, time, wallInFront ):
+    def __init__( self, balls, bumpData, irData, time, wallInFront ):
         self.balls = balls
         self.irData = irData
         self.bumpData = bumpData
@@ -35,17 +35,17 @@ class WorldBlargh( Blargh ):
             world = World( args, None, None, time.time() - self.startTime, False)
             return world
         elif(command == 1):
-            if arg[0] == None:
+            if args[0] == None:
                 # world = World( None, None, None, time.time() - self.startTime, False)
                 # return world
                 return None
-            elif arg[1] == None:
+            elif args[1] == None:
                 # world = World( None, None, None, time.time() - self.startTime, False)
                 # return world
                 return None
             else:
-                world = World(None,arg[0],arg[1],
-                                   time.time() - self.starTime,False)
+                world = World(None,args[0],args[1],
+                                   time.time() - self.startTime,False)
                 return world
                 
 

@@ -43,13 +43,13 @@ class EscapeState( State ):
             return stepArgs
 
         if ( world.time - self.startTime < BACKUP_TIME ):
-            goal = ( -1, 0 )
+            goal = ( -20, 0 )
         else:
             goal = (0, pi / 2)
 
         #If we've hit the timeout, switch to driving straight.
         if ( world.time - self.startTime > BACKUP_TIME + TURN_TIME ):
-            return DriveStraightState( time ), STATE_CHANGE_FLAG
+            return DriveStraightState(), STATE_CHANGE_FLAG
         #Otherwise, keep turning.
         else:
             return self, goal
@@ -71,7 +71,7 @@ class DriveStraightState( State ):
             print "See Ball"
             return SeekBallState(), STATE_CHANGE_FLAG
 
-        #With 0.50 chancxe per second, switch to turning.
+        #With 0.50 chance per second, switch to turning.
         randomval = random.random()
         if random.random() < 1 - ( 1 - 0.50 )**(world.time - self.lastTime):
             print "should turn"
@@ -162,7 +162,7 @@ class StateMachine:
         self.goal = STATE_CHANGE_FLAG
 
     def step( self ):
-        #print "State:",self.state
+        print "State:",self.state
         stateReturns = self.state.step()
         if (not stateReturns == None ):
             self.state, self.goal = stateReturns
