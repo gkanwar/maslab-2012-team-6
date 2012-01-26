@@ -127,7 +127,7 @@ class ImageProcessing
             // Make some windows
             cvNamedWindow("Original", CV_WINDOW_AUTOSIZE);
             //cvNamedWindow("Output", CV_WINDOW_AUTOSIZE);
-            //cvNamedWindow("Intermediate", CV_WINDOW_AUTOSIZE);
+            cvNamedWindow("Intermediate", CV_WINDOW_AUTOSIZE);
             //cvNamedWindow("Int2", CV_WINDOW_AUTOSIZE);
             cvNamedWindow("Ellipse", CV_WINDOW_AUTOSIZE);
 
@@ -327,18 +327,37 @@ class ImageProcessing
                 {
                     frameIndex = i * frame->widthStep + j * frame->nChannels;
                     ballIndex = i * ballImage->widthStep + j * ballImage->nChannels;
-
-                    if (((uchar)frame->imageData[frameIndex] >= 240 ||
-                        (uchar)frame->imageData[frameIndex] <= 20) &&
-                        (uchar)frame->imageData[frameIndex+1] >= 100 &&
-                        (uchar)frame->imageData[frameIndex+1] <= 255) //&&
-                        //frame->imageData[index+2] > vLow &&
-                        //frame->imageData[index+2] < vLow)
+		    uchar hue = (uchar)frame->imageData[frameIndex];
+		    uchar sat = (uchar)frame->imageData[frameIndex + 1];
+		    uchar val = (uchar)frame->imageData[frameIndex + 2];
+                    if ((hue >= 240 || hue <= 20) && sat >= 100 && sat <= 255)
                     {
                         ballImage->imageData[ballIndex] = 255;
                     }
+		    else if (hue <= 180 && hue >= 160 && sat >= 80 && sat <= 255)
+		    {
+		        for (int k = i; k >= 0; k--)
+			{
+			    index = k*frame->widthStep + j*frame->nChannels;
+			    hue = (uchar)frame->imageData[index];
+			    sat = (uchar)frame->imageData[index+1];
+			    val = (uchar)frame->imageData[index+2];
+			    if(hue != 213 || sat != 255 || val != 255)
+			    {
+			        frame->imageData[index] = 213;
+				frame->imageData[index+1] = 255;
+				frame->imageData[index+2] = 255;
+			    }
+			    else
+			    {
+				break;
+			    }
+			    
+			}
+		    }
                 }
             }
+	    cvShowImage("Intermediate",frame);
             //cvShowImage("Intermediate", ballImage);
 
             cout << "Find contours" << endl << flush;
