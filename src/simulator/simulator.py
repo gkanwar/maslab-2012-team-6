@@ -16,6 +16,7 @@ BALL_PICKUP_DISTANCE = 5.5
 # Camera constraints
 CAMERA_MAX_SIGHTING_ANGLE = pi / 6
 CAMERA_MIN_SIGHTING_DISTANCE = 10
+CAMERA_MAX_SIGHTING_DISTANCE = 50
 
 
 # Converts a vector (x,y) to (r, theta)
@@ -101,15 +102,12 @@ class Component:
         self.position = self.robot.position + toVector( ( r, theta + self.robot.heading ) )
 
         self.heading = self.robot.heading + self.headingOffset
-        
-#Encapsulates Camera functionality for nice code later
-class Camera( Component ):
-
-    # Takes an vector position (in the world) and returns true if that position can be seen by the camera.
-    def canSee( self, position ):
+    
+    # Takes a vector object and returns the local r theta position with respect to the object.
+    def localize( self, position ):
         r, theta = toPolar( Vector( position.y - self.position.y, position.x - self.position.x ) )
 
-        #Rotate the point so that theta = 0 means it's right in front of the camera.
+        #Rotate the point so that theta = 0 means it's right in front of the component.
         theta = theta - self.heading
 
         # Make sure theta is between -pi and pi
@@ -118,8 +116,19 @@ class Camera( Component ):
         while theta < -1 * pi:
             theta += 2 * pi
 
+        return ( r, theta )
+        
+#Encapsulates Camera functionality for nice code later
+class Camera( Component ):
+
+    # Takes an vector position (in the world) and returns true if that position can be seen by the camera.
+    def canSee( self, position ):
+        r, theta = self.localize( position )
+
         # Returns True if the position is in the vision cone.
-        return ( abs(theta) < CAMERA_MAX_SIGHTING_ANGLE and r > CAMERA_MIN_SIGHTING_DISTANCE )
+        return ( abs(theta) < CAMERA_MAX_SIGHTING_ANGLE
+            and r > CAMERA_MIN_SIGHTING_DISTANCE
+            and r < CAMERA_MAX_SIGHTING_DISTANCE )
 
     
     def detectBalls(self, balls):

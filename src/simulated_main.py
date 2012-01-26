@@ -38,7 +38,6 @@ if __name__ == "__main__":
         time.sleep(1)
 
     print "Killing Everything!"
-    #killAllBlarghProcesses(processes)
-    for proc in processes:
-        killBlarghProcess(proc)
+    for process in processes:
+        killBlarghProcess( process )
     masterConn.send(("KILL", None))
