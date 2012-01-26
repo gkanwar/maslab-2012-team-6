@@ -15,6 +15,8 @@ class World:
     def __init__( self, balls, bumpData, irData, time, wallInFront ):
         self.balls = balls
         #print time
+        self.bumpData = bumpData
+        self.irData = irData
         self.time = time
         self.wallInFront = wallInFront
     def isWallInFront( self ):
@@ -26,7 +28,7 @@ class State(object):
     def step(self):
         if world.time > 179:
             return DeadState(), STATE_CHANGE_FLAG
-        if world.isWallInFront():
+        if world.isWallInFront() or ( not world.bumpData == None and (world.bumpData.left or world.bumpData.right)):
             return EscapeState(), STATE_CHANGE_FLAG
         else:
             return None,None      

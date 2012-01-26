@@ -93,6 +93,7 @@ class ArduinoWrapper():
         self.motors.append(Motor(self.ard, self.mcs[0]))
 
         self.bumpSensors.append(BumpSensor(self.ard, 2))
+        self.bumpSensors.append(BumpSensor(self.ard, 3))
 
     def start(self):
         self.ard.run()
