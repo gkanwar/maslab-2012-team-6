@@ -33,9 +33,8 @@ if __name__ == "__main__":
     processes = [vision.start(), world.start(), behavior.start(), control.start()]
 
     # Main timer loop, kill all processes when time runs out
-    # FIXME
     startTime = time.time()
-    while time.time() - startTime < 3 * 30:
+    while time.time() - startTime < 3 * 60:
         time.sleep(1)
 
     print "Killing Everything!"

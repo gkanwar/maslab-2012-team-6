@@ -19,7 +19,7 @@ class WorldBlargh( Blargh ):
     def __init__( self ):
         self.startTime = time.time()
     def step( self, inp ):
-        if ( not inp == None):
+        if ( not inp == None ):
             command, args = inp
         else:
             print "No Input!"

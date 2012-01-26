@@ -2,6 +2,15 @@ from blargh import Blargh
 from math import pi
 import random
 
+# Behavior-related constants.
+BACKUP_TIME = 2
+TURN_TIME = 2
+BALL_CAPTURE_THRESHOLD = 11
+THETA_THRESHOLD = pi / 6
+AQUIRE_TIME = 1
+
+STATE_CHANGE_FLAG = 0
+
 class World:
     def __init__( self, balls, bumpData, irData, time, wallInFront ):
         self.balls = balls
@@ -13,25 +22,14 @@ class World:
 
 world = World( [], None, None, 0, False )
 
-# Behavior-related constants.
-BACKUP_TIME = 2
-TURN_TIME = 2
-BALL_CAPTURE_THRESHOLD = 11
-THETA_THRESHOLD = pi / 6
-AQUIRE_TIME = 1
-
-STATE_CHANGE_FLAG = 0
-
 class State(object):
-
     def step(self):
-        if world. time > 179:
+        if world.time > 179:
             return DeadState(), STATE_CHANGE_FLAG
         if world.isWallInFront():
             return EscapeState(), STATE_CHANGE_FLAG
         else:
-            return None,None
-        
+            return None,None      
     
 
 class EscapeState( State ):
@@ -162,7 +160,7 @@ class StateMachine:
         self.goal = STATE_CHANGE_FLAG
 
     def step( self ):
-        print "State:",self.state
+        #print "State:",self.state
         stateReturns = self.state.step()
         if (not stateReturns == None ):
             self.state, self.goal = stateReturns
