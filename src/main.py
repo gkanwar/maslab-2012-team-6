@@ -3,7 +3,7 @@ sys.path.append("../lib")
 
 import time
 
-from blargh.blargh_process import BlarghProcessStarter, cascadeBlarghProcesses, killAllBlarghProcesses
+from blargh.blargh_process import *
 from vision import VisionBlargh
 from world import WorldBlargh
 from behavior import BehaviorBlargh
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     input = BlarghProcessStarter( InputBlargh, [arduinoInputWrapper], True )
     vision = BlarghProcessStarter( VisionBlargh, [], True )
     world = BlarghProcessStarter( WorldBlargh, [], True) #Async for Odometry purposes.
-    behavior = BlarghProcessStarter( BehaviorBlargh, [], True) #Async because this has timeouts, etc.
+    behavior = BlarghProcessStarter( BehaviorBlargh, [], False) #Async because this has timeouts, etc.
     control = BlarghProcessStarter( ControlBlargh, [arduinoControlWrapper], True )
 
     cascadeBlarghProcesses(input, world);

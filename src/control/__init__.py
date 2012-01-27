@@ -11,12 +11,12 @@ class ControlBlargh(Blargh):
         self.angleThreshold = pi / 16
         self.driveThreshold = .3
         # Old values
-        #self.anglePID = PID((1,0,0))
+        #self.anglePID = PID((30,0,0))
         #self.drivePID = PID((.04,0,0))
-        self.anglePID = PID((2,0,0))
-        self.drivePID = PID((.02,0,0))
+        self.anglePID = PID((5,0,0))
+        self.drivePID = PID((.05,0,0))
         self.goal = None
-        self.maxMotorSpeed = 0.6
+        self.maxMotorSpeed = 1
     STATE_CHANGE_FLAG = 0
     def step(self, goal):
         if not goal == None:

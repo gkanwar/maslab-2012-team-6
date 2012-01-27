@@ -5,28 +5,31 @@ import random
 # Behavior-related constants.
 BACKUP_TIME = 2
 TURN_TIME = 2
-BALL_CAPTURE_THRESHOLD = 11
+BALL_CAPTURE_THRESHOLD = 3
 THETA_THRESHOLD = pi / 6
-AQUIRE_TIME = 1
+AQUIRE_TIME = 3
 
 STATE_CHANGE_FLAG = 0
 
-class World:
-    def __init__( self, balls, bumpData, irData, time, wallInFront ):
+# Will, this is a hack, change it when you rewrite plzzzzz (unless you want
+# me to, cuz I can) kthx
+# -Tej
+class World():
+    def __init__(self, balls, bumpData, irData, time, wallInFront):
         self.balls = balls
-        #print time
         self.bumpData = bumpData
         self.irData = irData
         self.time = time
         self.wallInFront = wallInFront
-    def isWallInFront( self ):
+    def isWallInFront(self):
         return self.wallInFront
 
-world = World( [], None, None, 0, False )
+world = World([], None, None, 0, False)
 
 class State(object):
     def step(self):
         if world.time > 179:
+            print "World.time", world.time, " is too high"
             return DeadState(), STATE_CHANGE_FLAG
         if world.isWallInFront() or ( not world.bumpData == None and (world.bumpData.left or world.bumpData.right)):
             return EscapeState(), STATE_CHANGE_FLAG
@@ -38,14 +41,14 @@ class EscapeState( State ):
     def __init__( self ):
         self.startTime = world.time
     def step( self ):         
-        stepArgs = super(EscapeState, self).step()
-        if (stepArgs[1] == STATE_CHANGE_FLAG):
-            return stepArgs
+        #stepArgs = super(EscapeState, self).step()
+        #if (stepArgs[1] == STATE_CHANGE_FLAG):
+        #    return stepArgs
 
         if ( world.time - self.startTime < BACKUP_TIME ):
             goal = ( -20, 0 )
         else:
-            goal = (0, pi / 2)
+            goal = (0, pi / 4)
 
         #If we've hit the timeout, switch to driving straight.
         if ( world.time - self.startTime > BACKUP_TIME + TURN_TIME ):
@@ -73,7 +76,7 @@ class DriveStraightState( State ):
 
         #With 0.50 chance per second, switch to turning.
         randomval = random.random()
-        if random.random() < 1 - ( 1 - 0.50 )**(world.time - self.lastTime):
+        if random.random() < 1 - ( 1 - 0.20 )**(world.time - self.lastTime):
             print "should turn"
             return TurnState(), STATE_CHANGE_FLAG
 
@@ -91,13 +94,13 @@ class TurnState( State ):
         if(stepArgs[1] == STATE_CHANGE_FLAG):
             return stepArgs
 
-        goal = ( 0, pi / 6 )
+        goal = ( 0, pi / 16 )
         #If we see a ball...
         if not world.balls == None and len( world.balls ) > 0 :
                 return SeekBallState(), STATE_CHANGE_FLAG
 
         #With 0.10 chance per second, switch to driving forward.
-        if random.random() < 1 - ( 1 - 0.10 )**(world.time - self.lastTime):
+        if random.random() < 1 - ( 1 - 0.50 )**(world.time - self.lastTime):
             return DriveStraightState(), STATE_CHANGE_FLAG
 
         #Otherwise, turn.
@@ -107,6 +110,7 @@ class TurnState( State ):
 
 class SeekBallState( State ):
     def step( self ):
+        print "In seek ball"
         stepArgs = super(SeekBallState,self).step()
         if (stepArgs[1] == STATE_CHANGE_FLAG):
             return stepArgs
@@ -180,12 +184,10 @@ class BehaviorBlargh(Blargh):
 
     def step(self, new_world):
         global world
-	    # If the Blargh has been passed a new version of the world to deal with feed it in.
-        if not new_world == None:
-		    world = new_world
+        world = new_world
+
         # Act on the model of the world if we have one. Otherwise, return None.
-        if not world == None:
-            self.StateMachine.step()
-            return self.StateMachine.goal
-        else:
-            return None
+        if not world.balls == None:
+            print "balls:", world.balls
+        self.StateMachine.step()
+        return self.StateMachine.goal

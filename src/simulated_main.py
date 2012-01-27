@@ -22,7 +22,7 @@ if __name__ == "__main__":
     # Create the structure for checkpoint 4
     vision = BlarghProcessStarter(VisionBlargh, [visionSimulatorInterface], True)
     world = BlarghProcessStarter(WorldBlargh, [], True)
-    behavior = BlarghProcessStarter(BehaviorBlargh, [], True)
+    behavior = BlarghProcessStarter(BehaviorBlargh, [], False)
     control = BlarghProcessStarter(ControlBlargh, [controlSimulatorInterface], True)
 
     cascadeBlarghProcesses(vision, world)

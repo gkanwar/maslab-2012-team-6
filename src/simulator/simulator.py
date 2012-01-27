@@ -196,7 +196,7 @@ class Robot(Object):
         self.position = self.position + scale( delTime * avgSpeed, unitVector( self.heading ) )
 
         # That's right. Radians, bitches.
-        self.heading += self.maxMotorSpeed * delTime * (self.leftMotorSaturation - self.rightMotorSaturation) / (2 * self.radius)
+        self.heading += self.maxMotorSpeed * delTime * (self.leftMotorSaturation - self.rightMotorSaturation) / (4 * self.radius)
         while self.heading > 2 * pi:
             self.heading += -2 * pi
         while self.heading < 0:
