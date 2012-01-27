@@ -145,7 +145,7 @@ class AquireBallState( State ):
         if ( world.time - self.startTime > AQUIRE_TIME ):
             return DriveStraightState(world), STATE_CHANGE_FLAG
 
-        #Otherwise, full steam aheadn.
+        #Otherwise, full steam ahead.
         else:
             self.lastTime = world.time
             return self, goal

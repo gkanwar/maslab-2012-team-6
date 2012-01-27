@@ -12,7 +12,7 @@
 
 using namespace std;
 
-#define CAMERA_NUM 1
+#define CAMERA_NUM 0
 #define NUM_FRAMES_TO_AVERAGE 2
 
 #define RED_DISPARITY 100
@@ -106,10 +106,7 @@ class ImageProcessing
             // Create all the images
             frame = cvCreateImage(cvSize(IMG_WIDTH/2, IMG_HEIGHT/2), IPL_DEPTH_8U, 3);
             hsvImage = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
-            normalized = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
             ballImage = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 1);
-            contourImage = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 1);
-            contourImage3C = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
             ellipseImage = cvCreateImage(cvGetSize(frame), IPL_DEPTH_8U, 3);
 
             // Create a CvMemStorage
@@ -129,14 +126,12 @@ class ImageProcessing
             //cvNamedWindow("Output", CV_WINDOW_AUTOSIZE);
             //cvNamedWindow("Intermediate", CV_WINDOW_AUTOSIZE);
             //cvNamedWindow("Int2", CV_WINDOW_AUTOSIZE);
-            //cvNamedWindow("Ellipse", CV_WINDOW_AUTOSIZE);
+            cvNamedWindow("Ellipse", CV_WINDOW_AUTOSIZE);
 
             // Load the HSV array from memory
             loadHSVArray();
 
             pthread_create(&frameCapture, NULL, frameCaptureThread, NULL);
-            ranIntoWall = false;
-            //cout << "End constructor: " << balls.size() << " " << &balls << endl;
         }
 
         ~ImageProcessing()
@@ -183,7 +178,7 @@ class ImageProcessing
 	  //cout << "Begin process balls" << endl << flush;
             int index;
 
-            // Shrink the frame
+            // Shrink the frame, dunno why this if is neccessary but it works.  I also don't know how to spell "necessary" but this works
             if (i > 0)
             {
                  cvZero(largeFrame);
@@ -267,7 +262,6 @@ class ImageProcessing
             cvShowImage("Int2", normalized);
             */
 
-            //cout << "Convert to HSV" << endl << flush;
             // Convert to HSV space
             struct ColorHSV* hsvVal;
             for (int i = 0; i < frame->height; i++)
@@ -281,7 +275,6 @@ class ImageProcessing
                     frame->imageData[index+2] = hsvVal->v;
                 }
             }
-            cvSplit(frame, contourImage, NULL, NULL, NULL);
             // Show it
             //cvShowImage("Int2", contourImage);
 
@@ -316,26 +309,28 @@ class ImageProcessing
                 }
             }
             */
-
-            //cout << "Filter image" << endl << flush;
             // Filter image using HSV values
             cvZero(ballImage);
+	    cvZero(ellipseImage);
             int frameIndex, ballIndex;
+	    uchar hue,sat,val;
             for (int i = 0; i < frame->height; i++)
             {
                 for (int j = 0; j < frame->width; j++)
-                {
+		{
                     frameIndex = i * frame->widthStep + j * frame->nChannels;
                     ballIndex = i * ballImage->widthStep + j * ballImage->nChannels;
-		    uchar hue = (uchar)frame->imageData[frameIndex];
-		    uchar sat = (uchar)frame->imageData[frameIndex + 1];
-		    uchar val = (uchar)frame->imageData[frameIndex + 2];
-                    if ((hue >= 240 || hue <= 20) && sat >= 100 && sat <= 255)
-                    {
-                        ballImage->imageData[ballIndex] = 255;
-                    }
-		    else if (hue <= 170 && hue >= 150 && sat >= 80 && sat <= 255)
+		    hue = (uchar)frame->imageData[frameIndex];
+		    sat = (uchar)frame->imageData[frameIndex + 1];
+		    val = (uchar)frame->imageData[frameIndex + 2];
+		    if ( sat <= 255)
 		    {
+		      if ((hue >= 240 || hue <= 20) && sat >= 100)
+		      {
+			  ballImage->imageData[ballIndex] = 255;
+		      }
+		      else if (hue <= 170 && hue >= 150 && sat >= 80)
+		      {
 		        for (int k = i; k >= 0; k--)
 			{
 			    index = k*frame->widthStep + j*frame->nChannels;
@@ -352,30 +347,22 @@ class ImageProcessing
 			    {
 				break;
 			    }
-			    
 			}
+		      }
 		    }
                 }
             }
 	    //cvShowImage("Intermediate",frame);
             //cvShowImage("Intermediate", ballImage);
 
-            //cout << "Find contours" << endl << flush;
-
             // Get contours in the image
             CvSeq* contours = NULL;
             cvFindContours(ballImage, contourStorage, &contours);//, sizeof(CvContour), CV_RETR_EXTERNAL);
-            // Show it!
-
-
-            //cout << "Before process contours" << endl << flush;
             // Process contours with fit ellipse
             int width, height, numPoints;
             float avgCircleR; // Should be D, but whatever
             Ball* tempBall;
-            cvZero(ellipseImage);
-            cvZero(contourImage);
-            CvBox2D ellipseBound;
+            CvBox2D ellBound;
             balls.clear();
             for (CvSeq* contour = contours; contour != 0; contour = contour->h_next)
             {
@@ -389,22 +376,24 @@ class ImageProcessing
                 {
                     cvSeqPush(listOfPoints, CV_GET_SEQ_ELEM(CvPoint, contour, i));
                 }
-                ellipseBound = cvFitEllipse2(listOfPoints);
-                cvEllipse(ellipseImage, cvPoint(ellipseBound.center.x, ellipseBound.center.y), cvSize(ellipseBound.size.width/2, ellipseBound.size.height/2), -ellipseBound.angle, 0, 360, CV_RGB(0, 0xff, 0));
-                if (eccentricity(ellipseBound.size.width, ellipseBound.size.height) <= ECCENTRICITY_THRESHOLD)
+                ellBound = cvFitEllipse2(listOfPoints);
+                cvEllipse(ellipseImage, cvPoint(ellBound.center.x, ellBound.center.y), 
+			  cvSize(ellBound.size.width/2, ellBound.size.height/2), 
+			  -ellBound.angle, 0, 360, CV_RGB(0, 0xff, 0));
+                if (eccentricity(ellBound.size.width, ellBound.size.height) <= ECCENTRICITY_THRESHOLD)
                 {
-                    avgCircleR = (ellipseBound.size.width + ellipseBound.size.height)/2;
+                    avgCircleR = (ellBound.size.width + ellBound.size.height)/2;
                 }
                 else
                 {
-                    avgCircleR = ellipseBound.size.width < ellipseBound.size.height ?
-                                 ellipseBound.size.width : ellipseBound.size.height;
+                    avgCircleR = ellBound.size.width < ellBound.size.height ?
+                                 ellBound.size.width : ellBound.size.height;
                 }
-                cvEllipse(ellipseImage, cvPoint(ellipseBound.center.x, ellipseBound.center.y), cvSize(avgCircleR/2, avgCircleR/2), -ellipseBound.angle, 0, 360, CV_RGB(0, 0, 0xff));
-                tempBall = (Ball*) new Ball(1000/avgCircleR, ((ellipseBound.center.x/contourImage->width) - 0.5) * FOV);
+                cvEllipse(ellipseImage, cvPoint(ellBound.center.x, ellBound.center.y), cvSize(avgCircleR/2, avgCircleR/2), - ellBound.angle, 0, 360, CV_RGB(0, 0, 0xff));
+                tempBall = (Ball*) new Ball(1000/avgCircleR, ((ellBound.center.x/ballImage->width) - 0.5) * FOV);
                 balls.push_back(tempBall);
             }
-            //cvShowImage("Ellipse", ellipseImage);
+            cvShowImage("Ellipse", ellipseImage);
             // Process contours with a houghTransform - REDACTED!
             /*
             CvSeq* houghCircles = cvHoughCircles(contourImage, houghStorage, CV_HOUGH_GRADIENT, 3, 5, 10, 50);
@@ -425,17 +414,14 @@ class ImageProcessing
         }
         int getNumBalls()
         {
-	  //cout << "getNumBalls: " << &balls << endl << flush;
             return balls.size();
         }
         float getR(int index)
         {
-	  //cout << "getR" << endl << flush;
             return balls[index]->r;
         }
         float getTheta(int index)
         {
-	  //cout << "getTheta" << endl << flush;
             return balls[index]->theta;
         }
 };
