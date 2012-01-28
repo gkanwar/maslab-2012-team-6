@@ -10,8 +10,11 @@ class World:
         self.startTime = startTime
         self.time = 0
         self.wallInFront = False
+        self.yellowPos = -1;
     def updateBalls(self, balls):
         self.balls = balls
+    def updateYellowPos(self, position):
+        self.yellowPos = position
     def updateBumpData(self, bumpData):
         self.bumpData = bumpData
     def updateIRData(self, irData):
@@ -38,7 +41,9 @@ class WorldBlargh(Blargh):
             if (command == self.VISION):
                 if args == None:
                     return None
-                self.world.updateBalls(args)
+                self.world.updateBalls(args[0])
+                self.world.updateYellowPosition(args[1])
+
             elif(command == self.INPUT):
                 bumpData, irData = args
                 if bumpData != None:

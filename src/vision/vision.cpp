@@ -12,12 +12,13 @@
 
 using namespace std;
 
-#define CAMERA_NUM 0
+#define CAMERA_NUM 1
 #define NUM_FRAMES_TO_AVERAGE 2
 
 #define RED_DISPARITY 100
 #define RED_THRESHOLD 60
 #define ECCENTRICITY_THRESHOLD 0.1
+#define YELLOW_FOR_WALL 40
 
 #define FOV .907
 
@@ -85,6 +86,7 @@ class ImageProcessing
         // Declare a vector of balls
         vector<Ball*> balls;
         bool ranIntoWall;
+        float centerYellowR;
         struct ColorHSV hsvArray[256][256][256];
         // Declare thresholds
         uchar hHigh;
@@ -124,7 +126,7 @@ class ImageProcessing
             // Make some windows
 	    // cvNamedWindow("Original", CV_WINDOW_AUTOSIZE);
             //cvNamedWindow("Output", CV_WINDOW_AUTOSIZE);
-            //cvNamedWindow("Intermediate", CV_WINDOW_AUTOSIZE);
+            cvNamedWindow("Intermediate", CV_WINDOW_AUTOSIZE);
             //cvNamedWindow("Int2", CV_WINDOW_AUTOSIZE);
             cvNamedWindow("Ellipse", CV_WINDOW_AUTOSIZE);
 
@@ -313,6 +315,7 @@ class ImageProcessing
             cvZero(ballImage);
 	    cvZero(ellipseImage);
             int frameIndex, ballIndex;
+	    int numYellow = 0, sumX = 0;
 	    uchar hue,sat,val;
             for (int i = 0; i < frame->height; i++)
             {
@@ -331,28 +334,47 @@ class ImageProcessing
 		      }
 		      else if (hue <= 170 && hue >= 150 && sat >= 80)
 		      {
-		        for (int k = i; k >= 0; k--)
-			{
-			    index = k*frame->widthStep + j*frame->nChannels;
-			    hue = (uchar)frame->imageData[index];
-			    sat = (uchar)frame->imageData[index+1];
-			    val = (uchar)frame->imageData[index+2];
-			    if(hue != 213 || sat != 255 || val != 255)
-			    {
-			        frame->imageData[index] = 213;
-				frame->imageData[index+1] = 255;
-				frame->imageData[index+2] = 255;
-			    }
-			    else
-			    {
-				break;
-			    }
-			}
+		          for (int k = i; k >= 0; k--)
+			  {
+			      index = k*frame->widthStep + j*frame->nChannels;
+			      hue = (uchar)frame->imageData[index];
+			      sat = (uchar)frame->imageData[index+1];
+			      val = (uchar)frame->imageData[index+2];
+			      if(hue != 213 || sat != 255 || val != 255)
+			      {
+			          frame->imageData[index] = 213;
+				  frame->imageData[index+1] = 255;
+				  frame->imageData[index+2] = 255;
+			      }
+			      else
+			      {
+				  break;
+			      }
+			  }
+		      }
+		      else if(hue <= 55 && hue >= 27 && sat >= 55)
+		      {
+			  frame->imageData[frameIndex] = 255;
+			  frame->imageData[frameIndex+1] = 0;
+			  frame->imageData[frameIndex+2] = 0;
+			  sumX += j;
+			  numYellow++;
 		      }
 		    }
                 }
             }
-	    //cvShowImage("Intermediate",frame);
+	    if(numYellow > YELLOW_FOR_WALL)
+	    {
+	        float centerYellowX = sumX/numYellow;
+		float centerYellowR = ((centerYellowX-ballImage->width) - 0.5) * FOV;
+	    }
+	    else
+	    {
+	        centerYellowR = -1; 
+	    }
+	      
+	      
+	    cvShowImage("Intermediate",frame);
             //cvShowImage("Intermediate", ballImage);
 
             // Get contours in the image
@@ -424,6 +446,14 @@ class ImageProcessing
         {
             return balls[index]->theta;
         }
+        int getYellowCenterR()
+        {
+            return centerYellowR;
+	}
+
+
+
+
 };
 
 extern "C"
@@ -452,6 +482,10 @@ extern "C"
     float getTheta(int index)
     {
         return ip->getTheta(index);
+    }
+    float getYellowCenterR()
+    {
+        return ip->getYellowCenterR();
     }
 }
 

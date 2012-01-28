@@ -7,6 +7,7 @@ visionlib.init.restype = c_int
 visionlib.processBalls.restype = c_int
 visionlib.getR.restype = c_float
 visionlib.getTheta.restype = c_float
+visionlib.getTheta.restype = c_float
 
 # Provide a python interface to the library, used by VisionBlargh
 class Vision(object):
@@ -27,6 +28,9 @@ class Vision(object):
     # Get the theta for a specific ball found
     def getTheta(self, index):
         return visionlib.getTheta(index)
+    # Get the center of all yellow that we see
+    def getYellowCenterR(self):
+        return visionlib.getYellowCenterR()
 
 
 # Example code
