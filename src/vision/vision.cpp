@@ -157,7 +157,7 @@ class ImageProcessing
 		}
 	    }
 	}
-        ColorHSV* convertToHSV( uchar b, uchar g, uchar r )
+        ColorHSV* convertToHSV(uchar b, uchar g, uchar r)
         {
 	    return &(hsvArray[r][g][b]);
 	}
@@ -236,9 +236,6 @@ class ImageProcessing
 		      }
 		      else if(hue <= 55 && hue >= 27 && sat >= 55)
 		      {
-			  frame->imageData[frameIndex] = 255;
-			  frame->imageData[frameIndex+1] = 0;
-			  frame->imageData[frameIndex+2] = 0;
 			  sumX += j;
 			  numYellow++;
 		      }

@@ -1,5 +1,5 @@
 from blargh import Blargh
-from state import *
+from states import *
 
 
 class StateMachine:
