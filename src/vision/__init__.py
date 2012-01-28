@@ -16,4 +16,4 @@ class VisionBlargh(Blargh):
         ballList = []
         for i in range(self.vision.getNumBalls()):
             ballList.append((self.vision.getR(i), self.vision.getTheta(i)))
-        return (0,(ballList,self.vision.getYellowCenterR))
+        return (0,(ballList,self.vision.getYellowCenterT))

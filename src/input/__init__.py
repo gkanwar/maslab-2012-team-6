@@ -11,25 +11,24 @@ class InputBlargh(Blargh):
 
     # Get input from aiw and possible process it
     def step(self, inp):
-        print "InputBlargh: stepped"
+        # print "InputBlargh: stepped"
         bumpData = BumpSensorData()
         irData = IRData()
         bumpData.left = self.ardInWrapper.getBumpHit(0)
         bumpData.right= self.ardInWrapper.getBumpHit(1)
-        print "BumpData:", bumpData.left
-        print "BumpData:", bumpData.right
-        
-        print "InputBlargh: got output"
         return (1,(bumpData, irData))
 
 class BumpSensorData():
     left = False
-    right = False
+    right= False
     back = False
     def __init__(self):
         pass
 
 class IRData():
+    # Meh probably should be like -1 by default but this works too
     front = 1000
     def __init__(self):
         pass
+
+
