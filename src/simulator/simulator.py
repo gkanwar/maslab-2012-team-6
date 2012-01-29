@@ -298,4 +298,4 @@ class VisionBlargh(Blargh):
         self.simulatorInterface = simulatorInterface
 
     def step(self, inp):
-        return 0, self.simulatorInterface.getBallsDetected()
+        return 0, (self.simulatorInterface.getBallsDetected(),-1)

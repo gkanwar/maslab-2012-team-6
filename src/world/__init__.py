@@ -42,7 +42,7 @@ class WorldBlargh(Blargh):
                 if args == None:
                     return None
                 self.world.updateBalls(args[0])
-                self.world.updateYellowPosition(args[1])
+                self.world.updateYellowPos(args[1])
 
             elif(command == self.INPUT):
                 bumpData, irData = args
