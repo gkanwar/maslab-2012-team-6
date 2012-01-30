@@ -2,21 +2,10 @@ from blargh import Blargh
 from states import *
 
 
-class StateMachine:
+from state_machine import *
 
-    def __init__( self, firstState ):
-        self.state = firstState
-        self.goal = STATE_CHANGE_FLAG
-
-    def step(self, world):
-        stateReturns = self.state.step(world)
-        if stateReturns[0] != self.state:
-            print world.time, self.state
-        if not stateReturns == None:
-            self.state, self.goal = stateReturns
-        else:
-            print "State none return", self.state
-
+# If you're thinking about refactoring this, please don't, or at least talk to either Will or Bianca first. Lots of the code which looks like it can be consolidated has purposely been copy pasted because it'll be branching out soon. Moving it back will just mean we have to copy paste again.
+# <3 Will
         
 # Takes in the state of the world and puts out some behavior based on
 # previous state (BehaviorBlargh is also a state machine :P)
