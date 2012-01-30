@@ -43,7 +43,7 @@ class Simulator:
         # Initialize variables
         self.size = Vector( 300, 170 )
 
-        self.walls = makeWalls( [ Vector(10,10), Vector(290,10), Vector(290,160), Vector( 10, 160 ), Vector( 10, 10 ) ] )
+        self.walls = makeWalls( [ Vector(10,10), Vector(290,10), Vector(290,160), Vector( 10, 160 ), Vector( 10, 10 ) ] )+ makeWalls( [ Vector(80,90), Vector(20,30), Vector( 0, 100 ), Vector( 80,90 ) ] ) 
         self.robot = Robot( scale( .5, self.size ), 0, self.walls )
         self.balls = [Ball( Vector(random.randint(0, int( self.size.x ) ),
                             random.randint(0, int( self.size.y ) ) ),
@@ -144,11 +144,15 @@ class Camera( Component ):
                 r, theta = self.localize( ball.position )
 
                 # I think that the convention for VisionBlargh is set opposite the direction here... whoops.
-                self.sightedBalls.append( ( r, -1*theta ) )
+                self.sightedBalls.append( ( r, -1 * theta ) )
                 ball.isSighted = True
             else:
                 ball.isSighted = False
         return self.sightedBalls
+
+class BumpSensor( Component ):
+    def isPressed( self, walls ):
+        pass
 
 
 class Robot(Object):
@@ -205,7 +209,8 @@ class Robot(Object):
             local_wall = localize( wall, self )
             r, theta, thetaStart, thetaEnd = local_wall
             overlap = self.radius - r
-            if overlap > 0:
+            # Not the most stringent criteria for collision ever, but it hopefully will do it's job.
+            if overlap > 0 and thetaStart < 0 and thetaEnd > 0:
                 print "COLLISION!", overlap
                 #Move the robot so that it's tanget to the wall
                 self.position = self.position - scale( overlap, unitVector( theta + self.heading ) )
@@ -293,8 +298,9 @@ def localize( wall, obj ):
         theta += pi
     
     theta = normalizeTheta( theta )
-
-    return( r, theta, thetaStart, thetaEnd )
+    if thetaStart < thetaEnd:
+        return( r, theta, thetaStart, thetaEnd )
+    return( r, theta, thetaEnd, thetaStart )
     
 class Ball(Object):
     def __init__(self, position, robot):
