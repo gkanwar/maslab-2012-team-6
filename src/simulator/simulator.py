@@ -18,6 +18,8 @@ CAMERA_MAX_SIGHTING_ANGLE = pi / 6
 CAMERA_MIN_SIGHTING_DISTANCE = 10
 CAMERA_MAX_SIGHTING_DISTANCE = 50
 
+BUMP_SENSOR_THRESHOLD = 0.5
+
 
 # Converts a vector (x,y) to (r, theta)
 def toPolar( v ):
@@ -88,7 +90,7 @@ class Object:
 
     # Takes a vector position and returns the local r theta position with respect to the object.
     def localize( self, position ):
-        r, theta = toPolar( Vector( position.y - self.position.y, position.x - self.position.x ) )
+        r, theta = toPolar(Vector(position.y - self.position.y, position.x - self.position.x))
 
         #Rotate the point so that theta = 0 means it's right in front of the component.
         theta = normalizeTheta( theta - self.heading )
@@ -110,7 +112,7 @@ class Component( Object ):
 
         self.offset = offset
         self.headingOffset = headingOffset
-        # Make sure we fill up our position, etc.
+        # Make sure we fill up our positipon, etc.
         self.step()
 
     def step( self ):
@@ -142,7 +144,6 @@ class Camera( Component ):
             # Then we see it!
             if self.canSee( ball ) and not ball.isAquired:
                 r, theta = self.localize( ball.position )
-
                 # I think that the convention for VisionBlargh is set opposite the direction here... whoops.
                 self.sightedBalls.append( ( r, -1 * theta ) )
                 ball.isSighted = True
@@ -150,9 +151,18 @@ class Camera( Component ):
                 ball.isSighted = False
         return self.sightedBalls
 
-class BumpSensor( Component ):
-    def isPressed( self, walls ):
-        pass
+class BumpSensor(Component):
+    def __init__(self,angle = 0):
+        self.val = False
+        self.angle = angle
+    def isPressed(self):
+        return self.val
+    def setVal(self,val):
+        self.val = val
+    def getAngle(self):
+        return self.angle
+        
+        
 
 
 class Robot(Object):
@@ -166,6 +176,8 @@ class Robot(Object):
         self.position = position
         self.heading = heading
         self.walls = walls
+
+        self.bumpSensors = [BumpSensor(0.5), BumpSensor(-0.5), BumpSensor(pi)]
 
         # Initialize radius
         self.radius = ROBOT_RADIUS
@@ -195,25 +207,42 @@ class Robot(Object):
         # Assuming this function gets called pretty often, it can
         # decouple the motions.
 
-        #Update Position
+        # Update Position
         avgSpeed = self.maxMotorSpeed * (self.leftMotorSaturation + self.rightMotorSaturation) / 2
         self.position = self.position + scale( delTime * avgSpeed, unitVector( self.heading ) )
 
-        #Update heading
+        # Update heading
         # That's right. Radians, bitches.
         self.heading = normalizeTheta( self.heading + self.maxMotorSpeed * delTime * (self.leftMotorSaturation - self.rightMotorSaturation) / (4 * self.radius) )
 
-        #Check for and fix collisions. Again, this function assumes a frequent call rate. Othewise, it may just miss this.
-        #TODO: check if wall is actually in area...
+        # Check for and fix collisions. Again, this function assumes a frequent call rate. Othewise, it may just miss this.
+        for sensor in self.bumpSensors:
+            sensor.setVal(False)
+
+        # TODO: check if wall is actually in area...
         for wall in self.walls:
             local_wall = localize( wall, self )
             r, theta, thetaStart, thetaEnd = local_wall
             overlap = self.radius - r
             # Not the most stringent criteria for collision ever, but it hopefully will do it's job.
             if overlap > 0 and thetaStart < 0 and thetaEnd > 0:
-                print "COLLISION!", overlap
                 #Move the robot so that it's tanget to the wall
-                self.position = self.position - scale( overlap, unitVector( theta + self.heading ) )
+                ortho = theta + self.heading
+                # overlap +=  0.01 if overlap > 0 else -0.01
+                print "COLLISSIONUUUU"
+                self.position = self.position - scale(overlap + 0.1, unitVector(ortho))
+                for sensor in self.bumpSensors:
+                    if(sensor.getAngle() <= theta + BUMP_SENSOR_THRESHOLD 
+                       and sensor.getAngle() >= theta - BUMP_SENSOR_THRESHOLD):
+                        sensor.setVal(True)
+        
+        for sensor in self.bumpSensors:
+            print sensor.isPressed()
+        
+        for i in range(2):
+            print self.getIRSensorDist(i)
+                    
+                
 
 	    # Update time
         self.lastTime = currentTime
@@ -237,13 +266,37 @@ class Robot(Object):
 
     # Simulates getting a bump hit
     def getBumpSensorHit(self, bumpSensorNum):
-        # TODO: Implement this
-        raise NotImplementedError
+        return self.bumpSensors[bumpSensorNum].isPressed()
+
 
     # Simulates getting an IR distance
     def getIRSensorDist(self, irSensorNum):
-        # TODO: Implement this
-        raise NotImplementedError
+        smallest = float("inf")
+        for wall in self.walls:
+
+            rStart, thetaStart = self.localize( wall.start )
+            rEnd, thetaEnd = self.localize( wall.end )
+            start = toVector( (rStart, thetaStart) )
+            end = toVector( (rEnd, thetaEnd) )
+
+           # Calculate the standard form mx+b
+            if (start.x  == end.x):
+                m = float("inf")
+            m = float( start.y - end.y ) /float( start.x - end.x )
+            b = start.y - m * start.x
+
+            x = -b/m
+
+            # print "dist: ",x,b,m,len(self.walls)
+            if((x <= end.x and x >= start.x) or (x >= end.x and x <= start.x)):
+                if(irSensorNum == 0):
+                    if(x < 0  and abs(x) < smallest):
+                        smallest = abs(x)
+                elif(irSensorNum == 1):
+                    if(x > 0 and x < smallest):
+                        smallest = x
+
+        return smallest - self.radius
 
     # Simulates setting a motor speed
     def setMotorSpeed(self, motorNum, speed):
@@ -283,14 +336,14 @@ def localize( wall, obj ):
     end = toVector( (rEnd, thetaEnd) )
 
     # Calculate the standard form mx+b
-    m = float( start.y - end.y ) / ( start.x - end.x )
+    m = float( start.y - end.y ) /float( start.x - end.x )
     b = start.y - m * start.x
     
     # r = x * cos( theta ) + y * sin( theta )
     # b = y - mx
     # Thus assuming b > 0, which we'll cover in a moment ...
     r = b / sqrt( 1 + m ** 2 )
-    theta = atan( -1.0 / m )
+    theta = atan2( (-m*b) / (m**2 + 1), (b) / (m**2 + 1) )
     
     #If r < 0, -r -> r, theta + pi -> theta
     if r < 0:
@@ -299,8 +352,8 @@ def localize( wall, obj ):
     
     theta = normalizeTheta( theta )
     if thetaStart < thetaEnd:
-        return( r, theta, thetaStart, thetaEnd )
-    return( r, theta, thetaEnd, thetaStart )
+        return(r, theta, thetaStart, thetaEnd)
+    return(r, theta, thetaEnd, thetaStart)
     
 class Ball(Object):
     def __init__(self, position, robot):
@@ -339,3 +392,11 @@ class VisionBlargh(Blargh):
 
     def step(self, inp):
         return 0, (self.simulatorInterface.getBallsDetected(),-1)
+
+class InputBlargh(Blargh):
+    def __init__(self,simulatorInterface):
+        self.simulatorInterface = simulatorInterface
+    def step(self, inp):
+        
+        return 1, args      
+                     
