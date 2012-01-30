@@ -200,6 +200,7 @@ class Robot(Object):
 
     # Update the Robot's position
     def step(self):
+        
         # Get the current time, calculate time between steps
         currentTime = time.time()
         delTime = currentTime - self.lastTime
@@ -228,21 +229,12 @@ class Robot(Object):
             if overlap > 0 and thetaStart < 0 and thetaEnd > 0:
                 #Move the robot so that it's tanget to the wall
                 ortho = theta + self.heading
-                # overlap +=  0.01 if overlap > 0 else -0.01
-                print "COLLISSIONUUUU"
-                self.position = self.position - scale(overlap + 0.1, unitVector(ortho))
+                overlap +=  0.01 if overlap > 0 else -0.01
+                self.position = self.position - scale(overlap, unitVector(ortho))
                 for sensor in self.bumpSensors:
                     if(sensor.getAngle() <= theta + BUMP_SENSOR_THRESHOLD 
                        and sensor.getAngle() >= theta - BUMP_SENSOR_THRESHOLD):
                         sensor.setVal(True)
-        
-        for sensor in self.bumpSensors:
-            print sensor.isPressed()
-        
-        for i in range(2):
-            print self.getIRSensorDist(i)
-                    
-                
 
 	    # Update time
         self.lastTime = currentTime
