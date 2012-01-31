@@ -21,10 +21,13 @@ class ControlBlargh(Blargh):
     STATE_CHANGE_FLAG = 0
     def step(self, goal):
 
-        if (isinstance(goal,tuple)):
-            pass
+        if ( not isinstance(goal,tuple)):
+            self.arduinoInterface.setMotorSpeed(2,0)
+            goal = (0,0)
         else:
-            self.arduinoInterface.setMotorSpeed(2,self.rollerSpeed)
+            self.arduinoInterface.setMoterSpeed(2,self.rollerSpeed)
+
+
             
         if not goal == None:
             self.goal = goal

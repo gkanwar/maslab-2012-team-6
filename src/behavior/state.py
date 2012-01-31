@@ -1,5 +1,6 @@
 import random
 import os
+import threading
 import time
 from math import pi
 from exceptions import NotImplementedError
@@ -26,7 +27,7 @@ class State(object):
         # Check for time running out
         if worldWrapper.time > 179:
             return DeadState(world), STATE_CHANGE_FLAG
-        # Check for bump, and go into EscapeState if we aren't already
+        # Check nnnnnnfor bump, and go into EscapeState if we aren't already
         if world.isWallInFront() or (not world.bumpData == None and (world.bumpData.left or world.bumpData.right)):
             if not isinstance(self, EscapeState):
                 return EscapeState(worldWrapper), STATE_CHANGE_FLAG
@@ -273,6 +274,10 @@ class EscapeState(State):
         else:
             return self, goal
 
+class MusicPlayer(threading.Thread):
+    def run(self):
+        os.system("../sounds/terrantheme1.mp3")
+
 # Special state that we start out and end in
 class DeadState(State):
 
@@ -283,6 +288,7 @@ class DeadState(State):
         if world.bumpData != None and world.bumpData.power == True:
             # Go into wandering
             worldWrapper.resetTime()
+            MusicPlayer().start()
             return FindBallState(worldWrapper), STATE_CHANGE_FLAG
         else:
             # Stay in DeadState and output a goal that we're already at, so we don't move

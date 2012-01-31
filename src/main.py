@@ -17,10 +17,6 @@ from arduino import createArduinoInterface, ArduinoInterfaceWrapper
 # This is the master process, it should control everything. It's also
 # what should get called to run this whole thing.
 
-class MusicThread(threading.Thread):
-    def run(self):
-        os.system("mpg123 ../sounds/terrantheme1.mp3")
-
 
 if __name__ == "__main__":
 
@@ -57,8 +53,6 @@ if __name__ == "__main__":
     cascadeBlarghProcesses(behavior, control)
     #Start Everything, and store it in a ist.
     processes = [input.start(), vision.start(), world.start(), behavior.start(), control.start()]
-    
-    MusicThread().start()
 
     # Wait for everything else to die before quitting
     joinAllBlarghProcesses(processes)
