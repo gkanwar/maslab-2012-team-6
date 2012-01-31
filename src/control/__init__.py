@@ -22,10 +22,10 @@ class ControlBlargh(Blargh):
     def step(self, goal):
 
         if ( not isinstance(goal,tuple)):
-            self.arduinoInterface.setMotorSpeed(2,0)
+            self.arduinoInterface.setMotorSpeed(2, 0)
             goal = (0,0)
         else:
-            self.arduinoInterface.setMoterSpeed(2,self.rollerSpeed)
+            self.arduinoInterface.setMotorSpeed(2, self.rollerSpeed)
 
 
             

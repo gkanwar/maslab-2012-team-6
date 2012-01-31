@@ -276,7 +276,7 @@ class EscapeState(State):
 
 class MusicPlayer(threading.Thread):
     def run(self):
-        os.system("../sounds/terrantheme1.mp3")
+        os.system("mpg123 ../sounds/terrantheme1.mp3")
 
 # Special state that we start out and end in
 class DeadState(State):

@@ -114,9 +114,9 @@ class ImageProcessing
             // Make some windows
 	    // cvNamedWindow("Original", CV_WINDOW_AUTOSIZE);
             //cvNamedWindow("Output", CV_WINDOW_AUTOSIZE);
-            cvNamedWindow("Intermediate", CV_WINDOW_AUTOSIZE);
+            //cvNamedWindow("Intermediate", CV_WINDOW_AUTOSIZE);
             //cvNamedWindow("Int2", CV_WINDOW_AUTOSIZE);
-            cvNamedWindow("Ellipse", CV_WINDOW_AUTOSIZE);
+            //cvNamedWindow("Ellipse", CV_WINDOW_AUTOSIZE);
 
             // Load the HSV array from memory
             loadHSVArray();
@@ -253,7 +253,7 @@ class ImageProcessing
 	    }
 	      
 	      
-	    cvShowImage("Intermediate",frame);
+	    //cvShowImage("Intermediate",frame);
 
             // Get contours in the image
             CvSeq* contours = NULL;
@@ -302,7 +302,7 @@ class ImageProcessing
 			        ((ellBound.center.x/ballImage->width) - 0.5) * FOV);
                 balls.push_back(tempBall);
             }
-            cvShowImage("Ellipse", ellipseImage);
+            //cvShowImage("Ellipse", ellipseImage);
             cvWaitKey(10);
         }
         int getNumBalls()
