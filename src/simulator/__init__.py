@@ -11,13 +11,10 @@ def simulatorInterface(pipes):
     def handleCommand(conn):
         # Input from the pipe should be a (cmd, arg) tuple
         cmd, arg = conn.recv()
-        if cmd != "MOTOR":
-            print "cmd, arg", cmd, arg
         if (cmd == "IR"):
             # Send back the IR distance
             conn.send(simulator.robot.getIRSensorDist(arg))
         elif (cmd == "BUMP"):
-            print "SI getBumpSensorHit", arg, simulator.robot.getBumpSensorHit(arg)
             # Send back whether the bump sensor was hit or not
             conn.send(simulator.robot.getBumpSensorHit(arg))
         elif (cmd == "VISION"):
@@ -84,14 +81,11 @@ class SimulatorInterfaceWrapper():
 
     def getBumpHit(self, bumpNum):
         self.conn.send(("BUMP", bumpNum))
-        print "SIW getBumpHit", bumpNum
         return self.conn.recv()
 
     def getBallsDetected(self):
         self.conn.send(("VISION", None))
-        out = self.conn.recv()
-        print "getBallsDetected", out
-        return out
+        return self.conn.recv()
 
     def setMotorSpeed(self, motorNum, speed):
         self.conn.send(("MOTOR", (motorNum, speed)))

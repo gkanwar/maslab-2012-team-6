@@ -1,7 +1,6 @@
-from state import *
+from util import STATE_CHANGE_FLAG
 
 class StateMachine:
-
     def __init__( self, firstState ):
         # Initialize the state and goal
         self.state = firstState

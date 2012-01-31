@@ -94,6 +94,8 @@ class ArduinoWrapper():
 
         self.bumpSensors.append(BumpSensor(self.ard, 2))
         self.bumpSensors.append(BumpSensor(self.ard, 3))
+        self.bumpSensors.append(BumpSensor(self.ard, 4))
+        self.bumpSensors.append(BumpSensor(self.ard, 6))
 
     def start(self):
         self.ard.run()

@@ -11,7 +11,6 @@ class InputBlargh(Blargh):
 
     # Get input from aiw and possible process it
     def step(self, inp):
-        print "IB: stepped"
         bumpData = BumpSensorData()
         irData = IRData()
         bumpData.left = self.ardInWrapper.getBumpHit(0)

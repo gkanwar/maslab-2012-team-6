@@ -16,12 +16,13 @@ from simulator import *
 
 if __name__ == "__main__":
     # Create the simulator interface, and wrappers
-    masterConn, visionConn, controlConn = createSimulatorInterface(3)
+    masterConn, inputConn, visionConn, controlConn = createSimulatorInterface(4)
+    inputSimulatorInterface = SimulatorInterfaceWrapper(inputConn)
     visionSimulatorInterface = SimulatorInterfaceWrapper(visionConn)
     controlSimulatorInterface = SimulatorInterfaceWrapper(controlConn)
 
     # Create the structure for checkpoint 4
-    input = BlarghProcessStarter(InputBlargh, [visionSimulatorInterface], True)
+    input = BlarghProcessStarter(InputBlargh, [inputSimulatorInterface], True)
     vision = BlarghProcessStarter(VisionBlargh, [visionSimulatorInterface], True)
     world = BlarghProcessStarter(WorldBlargh, [], True)
     behavior = BlarghProcessStarter(BehaviorBlargh, [], False)

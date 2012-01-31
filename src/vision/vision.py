@@ -29,7 +29,7 @@ class Vision(object):
     def getTheta(self, index):
         return visionlib.getTheta(index)
     # Get the center of all yellow that we see
-    def getYellowCenter(self):
+    def getYellowCenterT(self):
         return visionlib.getYellowCenterT()
 
 
