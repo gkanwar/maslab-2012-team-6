@@ -177,7 +177,7 @@ class Robot(Object):
         self.heading = heading
         self.walls = walls
 
-        self.bumpSensors = [BumpSensor(0.5), BumpSensor(-0.5), BumpSensor(pi)]
+        self.bumpSensors = [BumpSensor(0.5), BumpSensor(-0.5), BumpSensor(pi), BumpSensor(0)]
 
         # Initialize radius
         self.radius = ROBOT_RADIUS
@@ -258,6 +258,7 @@ class Robot(Object):
 
     # Simulates getting a bump hit
     def getBumpSensorHit(self, bumpSensorNum):
+        "getBumpSensorHit", bumpSensorNum
         return self.bumpSensors[bumpSensorNum].isPressed()
 
 
@@ -383,12 +384,4 @@ class VisionBlargh(Blargh):
         self.simulatorInterface = simulatorInterface
 
     def step(self, inp):
-        return 0, (self.simulatorInterface.getBallsDetected(),-1)
-
-class InputBlargh(Blargh):
-    def __init__(self,simulatorInterface):
-        self.simulatorInterface = simulatorInterface
-    def step(self, inp):
-        
-        return 1, args      
-                     
+        return 0, (self.simulatorInterface.getBallsDetected(), -1)

@@ -30,13 +30,11 @@ class State(object):
 # Special state that we start out and end in
 class DeadState(State):
 
-    POWER_BUMP_NUM = 6
-
     # Don't do anything until button push.
     def step(self, worldWrapper):
         world = worldWrapper.world
         # If the power button has been hit
-        if world.bumpData != None and world.bumpData[self.POWER_BUMP_NUM] == True:
+        if world.bumpData != None and world.bumpData.power == True:
             # Go into wandering
             worldWrapper.resetTime()
             return FindBallState(worldWrapper), STATE_CHANGE_FLAG

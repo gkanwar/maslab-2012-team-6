@@ -47,5 +47,3 @@ class WorldBlargh(Blargh):
                 if irData != None:
                     self.world.updateIRData(irData)
         return self.world
-                
-

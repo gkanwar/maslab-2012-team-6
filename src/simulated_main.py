@@ -3,10 +3,11 @@ sys.path.append("../lib")
 
 import time
 
-from blargh.blargh_process import BlarghProcessStarter, cascadeBlarghProcesses, killAllBlarghProcesses, killBlarghProcess
+from blargh.blargh_process import BlarghProcessStarter, cascadeBlarghProcesses, joinAllBlarghProcesses
 from world import WorldBlargh
 from behavior import BehaviorBlargh
 from control import ControlBlargh
+from input import InputBlargh
 
 from simulator import *
 
@@ -20,24 +21,18 @@ if __name__ == "__main__":
     controlSimulatorInterface = SimulatorInterfaceWrapper(controlConn)
 
     # Create the structure for checkpoint 4
+    input = BlarghProcessStarter(InputBlargh, [visionSimulatorInterface], True)
     vision = BlarghProcessStarter(VisionBlargh, [visionSimulatorInterface], True)
     world = BlarghProcessStarter(WorldBlargh, [], True)
     behavior = BlarghProcessStarter(BehaviorBlargh, [], False)
     control = BlarghProcessStarter(ControlBlargh, [controlSimulatorInterface], True)
 
+    cascadeBlarghProcesses(input, world)
     cascadeBlarghProcesses(vision, world)
     cascadeBlarghProcesses(world, behavior)
     cascadeBlarghProcesses(behavior, control)
 
     # Start Everything, and store it in a list.
-    processes = [vision.start(), world.start(), behavior.start(), control.start()]
+    processes = [input.start(), vision.start(), world.start(), behavior.start(), control.start()]
 
-    # Main timer loop, kill all processes when time runs out
-    startTime = time.time()
-    while time.time() - startTime < 3 * 60:
-        time.sleep(1)
-
-    print "Killing Everything!"
-    for process in processes:
-        killBlarghProcess( process )
-    masterConn.send(("KILL", None))
+    joinAllBlarghProcesses(processes)
