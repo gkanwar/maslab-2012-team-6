@@ -229,38 +229,9 @@ class CollectState(State):
 
         # TODO: Check for Ferrous full
 
-        # Check for the timeout to go into scoring state
-        if worldWrapper.time > self.TIMEOUT:
-            return ScoreState(worldWrapper)
-
-        # Step the state machine and output this state and our new goal
-        self.stateMachine.step(worldWrapper)
-        return self, self.stateMachine.goal
-
-# CollectState actually contains a state machine
-class CollectState(State):
-
-    TIMEOUT = 180
-
-    def __init__(self, worldWrapper):
-        # Create the internal state machine
-        self.stateMachine = StateMachine(FindBallState(worldWrapper))
-
-    def step(self, worldWrapper):
-        world = worldWrapper.world
-
-        # Check globals
-        newState, changed = self.checkGlobal(worldWrapper)
-        if changed == STATE_CHANGE_FLAG:
-            return newState, changed
-
-        # TODO: Check for Ferrous full
-
-        # Check for the timeout to go into scoring state
-        if worldWrapper.time >= self.TIMEOUT:
-            #return ScoreState(worldWrapper)
-            os.system("pkill mpg123")
-            return DeadState(worldWrapper)
+        # TODO: Check for the timeout to go into scoring state
+        #if worldWrapper.time > self.TIMEOUT:
+        #    return ScoreState(worldWrapper)
 
         # Step the state machine and output this state and our new goal
         self.stateMachine.step(worldWrapper)
