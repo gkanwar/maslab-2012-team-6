@@ -228,7 +228,7 @@ class CollectState(State):
 # CollectState actually contains a state machine
 class CollectState(State):
 
-    TIMEOUT = 150
+    TIMEOUT = 180
 
     def __init__(self, worldWrapper):
         # Create the internal state machine
@@ -245,8 +245,9 @@ class CollectState(State):
         # TODO: Check for Ferrous full
 
         # Check for the timeout to go into scoring state
-        if worldWrapper.time > self.TIMEOUT:
-            return ScoreState(worldWrapper)
+        if worldWrapper.time >= self.TIMEOUT:
+            #return ScoreState(worldWrapper)
+            return DeadState(worldWrapper)
 
         # Step the state machine and output this state and our new goal
         self.stateMachine.step(worldWrapper)
