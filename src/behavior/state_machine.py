@@ -11,6 +11,6 @@ class StateMachine:
         newState, goal = self.state.step(worldWrapper)
         # Debugging print
         if newState != self.state:
-            print "State is", self.state
+            print "State is", newState
         # Update our state and goal based on our step
         self.state, self.goal = newState, goal

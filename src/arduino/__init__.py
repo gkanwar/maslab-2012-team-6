@@ -1,3 +1,6 @@
+import sys
+sys.path.append("..")
+
 from arduino3 import *
 from blargh import Blargh
 from exceptions import ValueError
@@ -21,6 +24,7 @@ def arduinoInterface(pipes, arduinoWrapper):
         elif (cmd == "MOTOR"):
             motorNum, speed = arg
             # Set the motor speed via the wrapper
+            print arg, speed
             arduinoWrapper.setMotorSpeed(motorNum, speed)
             #print "Setting motor speed", motorNum, speed
             pipe.send("DONE")
@@ -68,6 +72,7 @@ class ArduinoInterfaceWrapper():
         return self.conn.recv()
 
     def setMotorSpeed(self, motorNum, speed):
+        print "AIW", speed
         self.conn.send(("MOTOR", (motorNum, speed)))
         return self.conn.recv()
 
@@ -96,6 +101,8 @@ class ArduinoWrapper():
         self.bumpSensors.append(BumpSensor(self.ard, 3))
         self.bumpSensors.append(BumpSensor(self.ard, 4))
         self.bumpSensors.append(BumpSensor(self.ard, 6))
+
+        self.irSensors.append(IRSensor(self.ard, 2))
 
     def start(self):
         self.ard.run()
@@ -132,8 +139,10 @@ class ArduinoWrapper():
     def getIRSensorDist(self, irNum):
         return self.irSensors[irNum].dist()
     def getBumpSensorHit(self, bumpNum):
+        print [b.hit() for b in self.bumpSensors]
         return self.bumpSensors[bumpNum].hit()
     def setMotorSpeed(self, motorNum, speed):
+        print speed
         speed *= 126
         self.motors[motorNum].setVal(int(speed))
     def setServoAngle(self, servoNum, angle):
@@ -142,8 +151,12 @@ class ArduinoWrapper():
 # A wrapper class for an IR sensor
 class IRSensor(AnalogSensor):
     def dist(self):
-        # TODO: Map voltages to distances somehow
-        return self.getValue()
+        val = self.getValue()
+        if val == None:
+            return None
+
+        # Map voltages to distance by a linear fit
+        return 0.0183374 * (701 - val)
 
 # A wrapper class for a bump sensor
 class BumpSensor(DigitalSensor):
