@@ -15,9 +15,6 @@ from simulator import *
 
 # This is the master process, it should control everything. It's also
 # what should get called to run this whole thing.
-class MusicThread(threading.Thread):
-    def run(self):
-        os.system("mpg123 ../sounds/terrantheme1.mp3")
 
 if __name__ == "__main__":
     # Create the simulator interface, and wrappers
@@ -40,7 +37,5 @@ if __name__ == "__main__":
 
     # Start Everything, and store it in a list.
     processes = [input.start(), vision.start(), world.start(), behavior.start(), control.start()]
-    
-    MusicThread().start()
 
     joinAllBlarghProcesses(processes)
