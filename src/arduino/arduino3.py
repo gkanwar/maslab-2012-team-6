@@ -259,12 +259,22 @@ class MotorController:
 ## Example setup for various sensors and actuators
 
 ## Set up the arduino itself (do this every time)
-#a = Arduino()
+a = Arduino()
 ## Setting up a motor controller (txPin = 18, rxPin = 19) and two motors
 ## on that motor controller
-#mc = MotorController(a, 18, 19)
-#m0 = Motor(a, mc)
-#m1 = Motor(a, mc)
+mc0 = MotorController(a, 18, 19)
+m0 = Motor(a, mc0)
+m1 = Motor(a, mc0)
+mc1 = MotorController(a, 16, 17)
+m2 = Motor(a, mc1)
+m3 = Motor(a, mc1)
+
+while True:
+    m0.setVal(-50)
+    m1.setval(50)
+    m2.setVal(50)
+    
+
 ## Setting up a digital sensor on digital port 2
 #d = DigitalSensor(a, 2)
 ## Setting up a servo on digital port 1

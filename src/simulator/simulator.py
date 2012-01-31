@@ -275,9 +275,12 @@ class Robot(Object):
            # Calculate the standard form mx+b
             if (start.x  == end.x):
                 m = float("inf")
-            m = float( start.y - end.y ) /float( start.x - end.x )
+            else:
+                m = float( start.y - end.y ) /float( start.x - end.x )
             b = start.y - m * start.x
 
+            if (m == 0):
+                m = float("inf")
             x = -b/m
 
             # print "dist: ",x,b,m,len(self.walls)

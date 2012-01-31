@@ -167,16 +167,27 @@ class TurnState(State):
 
         # Set the goal location
         goal = TurnState.GOAL
-        # With 0.10 chance per second, switch to driving forward.
+        # With 0.50 chance per second, switch to driving forward.
         # TODO: Check this value and tweak for best performance
         if random.random() < timeEqualizedRandom(self.lastTime, worldWrapper.time, 0.5):
             return DriveStraightState(worldWrapper), STATE_CHANGE_FLAG
-
         # Otherwise, turn.
         else:
             self.lastTime = worldWrapper.time
             return self, goal
 
+'''class FollowWallState(State):
+    def __init__(self,worldWrapper):
+        self.lastTime = worldWrapper.time
+    def step(self, worldWrapper):
+        newState, changed = self.checkGlobal(worldWrapper)
+        if (changed == STATE_CHANGE_FLAG):
+            return newState
+        if not worldWrapper.world.irData == None:
+            irData = worldWrapper.world.irData;
+            if (irData.left 
+'''
+            
 # Collect state actually contains a state machine
 class FindBallState(State):
     def __init__(self, worldWrapper):
@@ -304,4 +315,4 @@ class DeadState(State):
             return FindBallState(worldWrapper), STATE_CHANGE_FLAG
         else:
             # Stay in DeadState and output a goal that we're already at, so we don't move
-            return self, (0,0) # "Haha, it looks like an owl" -- The Great Ryan Andrew Cheu    
+            return self, 1 # "Haha, it looks like an owl" -- The Great Ryan Andrew Cheu    

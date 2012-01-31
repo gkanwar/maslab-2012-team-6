@@ -10,6 +10,7 @@ class ControlBlargh(Blargh):
         self.arduinoInterface = arduinoInterface
         self.angleThreshold = pi / 16
         self.driveThreshold = .3
+        self.rollerSpeed = 50
         # Old values
         #self.anglePID = PID((30,0,0))
         #self.drivePID = PID((.04,0,0))
@@ -19,6 +20,12 @@ class ControlBlargh(Blargh):
         self.maxMotorSpeed = 1
     STATE_CHANGE_FLAG = 0
     def step(self, goal):
+
+        if (isinstance(goal,tuple)):
+            pass
+        else:
+            self.arduinoInterface.setMotorSpeed(2,self.rollerSpeed)
+            
         if not goal == None:
             self.goal = goal
         if not self.goal == None:
