@@ -1,6 +1,8 @@
 import sys
+import threading
 sys.path.append("../lib")
 
+import os
 import time
 
 from blargh.blargh_process import *
@@ -14,6 +16,11 @@ from arduino import createArduinoInterface, ArduinoInterfaceWrapper
 
 # This is the master process, it should control everything. It's also
 # what should get called to run this whole thing.
+
+class MusicThread(threading.Thread):
+    def run(self):
+        os.system("mpg123 ../sounds/terrantheme1.mp3")
+
 
 if __name__ == "__main__":
 
@@ -43,12 +50,17 @@ if __name__ == "__main__":
     behavior = BlarghProcessStarter( BehaviorBlargh, [], False) #Async because this has timeouts, etc.
     control = BlarghProcessStarter( ControlBlargh, [arduinoControlWrapper], True )
 
+
     cascadeBlarghProcesses(input, world);
     cascadeBlarghProcesses(vision, world)
     cascadeBlarghProcesses(world, behavior)
     cascadeBlarghProcesses(behavior, control)
     #Start Everything, and store it in a ist.
     processes = [input.start(), vision.start(), world.start(), behavior.start(), control.start()]
+    
+    MusicThread().start()
 
     # Wait for everything else to die before quitting
     joinAllBlarghProcesses(processes)
+
+        

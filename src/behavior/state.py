@@ -1,4 +1,5 @@
 import random
+import os
 import time
 from math import pi
 from exceptions import NotImplementedError
@@ -247,6 +248,7 @@ class CollectState(State):
         # Check for the timeout to go into scoring state
         if worldWrapper.time >= self.TIMEOUT:
             #return ScoreState(worldWrapper)
+            os.system("pkill mpg123")
             return DeadState(worldWrapper)
 
         # Step the state machine and output this state and our new goal
