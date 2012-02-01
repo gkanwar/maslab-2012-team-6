@@ -58,12 +58,12 @@ class SeekBallState(State):
                 closestBall = ball
         # If the ball is close enough to capture and we're facing the right way, do so.
         if closestBall[0] < self.BALL_CAPTURE_THRESHOLD and (closestBall[1] < self.THETA_THRESHOLD or closestBall[1] > 2 * pi - self.THETA_THRESHOLD):
-            return AquireBallState(worldWrapper), STATE_CHANGE_FLAG
+            return AcquireBallState(worldWrapper), STATE_CHANGE_FLAG
         # Otherwise, keep seeking.
         else:
             return self, closestBall
 
-class AquireBallState(State):
+class AcquireBallState(State):
 
     GOAL = (10, 0)
 
@@ -71,7 +71,7 @@ class AquireBallState(State):
         # Keep track of time for equalized randomness
         self.startTime = worldWrapper.time
 
-    def step(self, world):
+    def step(self, worldWrapper):
         world = worldWrapper.world
 
         # Check global conditions
@@ -125,7 +125,7 @@ class BallAcquisitionState(State):
         return self, self.stateMachine.goal
 
 class DriveStraightState(State):
-    GOAL = (20, 0)
+    GOAL = (30, 0)
 
     def __init__(self, worldWrapper):
         # Keep track of the time between randomized checks
@@ -154,7 +154,7 @@ class DriveStraightState(State):
 
 class TurnState(State):
 
-    GOAL = (0, pi/16)
+    GOAL = (0, pi/8)
 
     def __init__(self, worldWrapper):
         # Keep track of the time between random checks for consistency
@@ -236,6 +236,7 @@ class CollectState(State):
 
         # Step the state machine and output this state and our new goal
         self.stateMachine.step(worldWrapper)
+        print "CollectState goal", self.stateMachine.goal
         return self, self.stateMachine.goal
 
 # TODO: Flesh this out

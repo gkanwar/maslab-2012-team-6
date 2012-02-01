@@ -3,6 +3,7 @@ from math import pi
 import time
 
 STATE_CHANGE_FLAG = 0
+DEAD_STATE_FLAG = 1
 
 class ControlBlargh(Blargh):
     
@@ -14,27 +15,24 @@ class ControlBlargh(Blargh):
         # Old values
         #self.anglePID = PID((30,0,0))
         #self.drivePID = PID((.04,0,0))
-        self.anglePID = PID((5,0,0))
-        self.drivePID = PID((.05,0,0))
+        self.anglePID = PID((.5,0,0), .5)
+        self.drivePID = PID((.5,0,0), .75)
         self.goal = None
         self.maxMotorSpeed = 1
-    STATE_CHANGE_FLAG = 0
+
     def step(self, goal):
 
-        if ( not isinstance(goal,tuple)):
-            self.arduinoInterface.setMotorSpeed(2, 0)
-            goal = (0,0)
-        else:
-            self.arduinoInterface.setMotorSpeed(2, self.rollerSpeed)
+        #self.arduinoInterface.setMotorSpeed(2, self.rollerSpeed)
 
-
-            
         if not goal == None:
             self.goal = goal
         if not self.goal == None:
             if self.goal == STATE_CHANGE_FLAG:
-                # print "Changing States!"
+                print "Changing States!"
                 self.anglePID.reset()
+            elif self.goal == DEAD_STATE_FLAG:
+                #self.arduinoInterface.setMotorSpeed(2, 0)
+                goal = (0,0)
             else:
                 r, theta = self.goal
                 # Make sure theta is between -pi and pi to avoid spinning in circles.
@@ -56,6 +54,11 @@ class ControlBlargh(Blargh):
                 #HACK - ?
                 aval = self.anglePID.update(theta)
                 dval = self.drivePID.update(r)
+                import math
+                if math.isnan(aval):
+                    print "AVAL NANNUUUUUU"
+                if math.isnan(dval):
+                    print "DVAL NANNUUUUUU"
                 if(aval + dval >= self.maxMotorSpeed):
                     self.arduinoInterface.setMotorSpeed(0, self.maxMotorSpeed)
                 elif(aval + dval <=-self.maxMotorSpeed):
@@ -70,13 +73,15 @@ class ControlBlargh(Blargh):
                 else:
                     self.arduinoInterface.setMotorSpeed(1, dval - aval)
 
+import math
 
 class PID:
 
-    def __init__(self, pidtuple):
+    def __init__(self, pidtuple, cap):
         self.P = pidtuple[0]
         self.I = pidtuple[1]
         self.D = pidtuple[2]
+        self.cap = cap
         self.lastVal = 0
         self.sumErr = 0
         self.startTime = time.time()
@@ -84,18 +89,26 @@ class PID:
     
     def update(self, stpt):
         currTime = time.time()
+        while (currTime == time.time()):
+            currTime = time.time() 
         self.linErr = stpt
         self.divErr = (self.lastVal - stpt) / (currTime - self.prevTime)
         self.lastval = stpt
         self.sumErr += stpt * (currTime - self.prevTime)
+        '''
         self.intErr = self.sumErr / (currTime - self.startTime)
+        if (math.isnan(self.intErr)):
+            print "REALLLLY FUCK THIS SHIT!!!!"
         self.prevTime = currTime 
-        pval = self.P*self.linErr + self.I*self.intErr + self.D*self.divErr
-        '''if(pval>=1):  
-            pval = 1
-        if(pval<=-1):
-            pval = -1'''
+        '''
+        #print "Hi Will!", self.linErr, self.divErr
+        pval = self.P*self.linErr + self.D*self.divErr
+        if(pval>=self.cap):  
+            pval = self.cap
+        if(pval<=-self.cap):
+            pval = self.cap
         return pval
     def reset( self ):
         self.startTime = time.time()
+        self.prevTime = time.time()
         self.sumErr = 0

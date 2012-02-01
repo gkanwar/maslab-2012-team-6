@@ -46,4 +46,7 @@ class WorldBlargh(Blargh):
                     self.world.updateBumpData(bumpData)
                 if irData != None:
                     self.world.updateIRData(irData)
+	b = self.world.bumpData
+        #if b != None:
+            #print [b.left, b.right, b.back, b.power]
         return self.world

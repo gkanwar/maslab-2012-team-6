@@ -92,6 +92,8 @@ class Arduino(threading.Thread):
             output += ";"
             self.port.write(output)
 
+            print self.motorSpeeds
+
             # Read in the data packet that the arduino sends back
             # Data packet format is identical to the command packet format,
             # except the modes are different (ex. 'D' for digital instead of
@@ -161,7 +163,6 @@ class Arduino(threading.Thread):
         output += ";"
 
         self.port.write(output)
-        print output
     
     # Getting and setting values for sensors and actuators
     def setMotorSpeed(self, motorNum, speed):
@@ -256,26 +257,28 @@ class MotorController:
         self.numMotors += 1
         return self.index * 2 + self.numMotors - 1
 
-## Example setup for various sensors and actuators
+if __name__ == "__main__":
+    ## Example setup for various sensors and actuators
 
-## Set up the arduino itself (do this every time)
-#a = Arduino()
-## Setting up a motor controller (txPin = 18, rxPin = 19) and two motors
-## on that motor controller
-#mc0 = MotorController(a, 18, 19)
-#m0 = Motor(a, mc0)
-#m1 = Motor(a, mc0)
-#mc1 = MotorController(a, 16, 17)
-#m2 = Motor(a, mc1)
-#m3 = Motor(a, mc1)
+    ## Set up the arduino itself (do this every time)
+    a = Arduino()
+    ## Setting up a motor controller (txPin = 18, rxPin = 19) and two motors
+    ## on that motor controller
+    mc0 = MotorController(a, 18, 19)
+    m0 = Motor(a, mc0)
+    m1 = Motor(a, mc0)
+    mc1 = MotorController(a, 16, 17)
+    m2 = Motor(a, mc1)
+    m3 = Motor(a, mc1)
 
-#a.run()
+    a.run()
 
-#while True:
-#    m0.setVal(-50)
-#    m1.setval(50)
-#    m2.setVal(50)
-    
+    import time
+    while True:
+        m0.setVal(-50)
+        m1.setVal(50)
+        m2.setVal(175)
+        time.sleep(0.1)
 
 ## Setting up a digital sensor on digital port 2
 #d = DigitalSensor(a, 2)
