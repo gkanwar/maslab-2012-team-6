@@ -5,6 +5,13 @@ import time
 STATE_CHANGE_FLAG = 0
 DEAD_STATE_FLAG = 1
 
+def capVal(val, maximum, minimum):
+    if (val > maximum):
+        val = maximum
+    elif (val < minimum):
+        val = minimum
+    return val
+
 class ControlBlargh(Blargh):
     
     def __init__(self, arduinoInterface):
@@ -26,7 +33,6 @@ class ControlBlargh(Blargh):
 
         if not goal == None:
             self.goal = goal
-        if not self.goal == None:
             if self.goal == STATE_CHANGE_FLAG:
                 print "Changing States!"
                 self.anglePID.reset()
@@ -52,28 +58,19 @@ class ControlBlargh(Blargh):
                     self.arduinoInterface.setMotorSpeed(0, 0)
                     self.arduinoInterface.setMotorSpeed(1, 0)'''
                 #HACK - ?
-                aval = self.anglePID.update(theta)
-                dval = self.drivePID.update(r)
-                import math
-                if math.isnan(aval):
-                    print "AVAL NANNUUUUUU"
-                if math.isnan(dval):
-                    print "DVAL NANNUUUUUU"
-                if(aval + dval >= self.maxMotorSpeed):
-                    self.arduinoInterface.setMotorSpeed(0, self.maxMotorSpeed)
-                elif(aval + dval <=-self.maxMotorSpeed):
-                    self.arduinoInterface.setMotorSpeed(0, -self.maxMotorSpeed)
-                else:
-                    self.arduinoInterface.setMotorSpeed(0, aval + dval)
-                    
-                if(dval - aval >= self.maxMotorSpeed):
-                    self.arduinoInterface.setMotorSpeed(1, self.maxMotorSpeed)
-                elif(dval - aval <=-self.maxMotorSpeed):
-                    self.arduinoInterface.setMotorSpeed(1, -self.maxMotorSpeed)
-                else:
-                    self.arduinoInterface.setMotorSpeed(1, dval - aval)
 
-import math
+                if (theta < self.angleThreshold):
+                    aval = self.anglePID.update(theta)
+                    dval = self.drivePID.update(r)
+                    motor0Speed = aval+dval
+                    motor1Speed = aval-dval
+                    motor0Speed = capVal(dval+aval, self.maxMotorSpeed, -self.maxMotorSpeed)
+                    motor1Speed = capVal(dval-aval, self.maxMotorSpeed, -self.maxMotorSpeed)
+                else:
+                    aval = self.anglePID.update(theta)
+                    motor0Speed = capVal(aval, self.maxMotorSpeed, -self.maxMotorSpeed)
+                    motor1Speed = capVal(-aval, self.maxMotorSpeed, -self.maxMotorSpeed)
+
 
 class PID:
 
@@ -87,20 +84,18 @@ class PID:
         self.startTime = time.time()
         self.prevTime = time.time()
     
-    def update(self, stpt):
+    def update(self, setPoint):
         currTime = time.time()
-        while (currTime == time.time()):
-            currTime = time.time() 
-        self.linErr = stpt
-        self.divErr = (self.lastVal - stpt) / (currTime - self.prevTime)
-        self.lastval = stpt
-        self.sumErr += stpt * (currTime - self.prevTime)
-        '''
-        self.intErr = self.sumErr / (currTime - self.startTime)
-        if (math.isnan(self.intErr)):
-            print "REALLLLY FUCK THIS SHIT!!!!"
-        self.prevTime = currTime 
-        '''
+        while (currTime == self.prevTime):
+            currTime = time.time()
+        self.linErr = setPoint
+
+        """
+        self.divErr = (self.lastVal - setPoint) / (currTime - self.prevTime)
+        self.lastval = setPoint
+        self.sumErr += setPoint * (currTime - self.prevTime)
+        """
+
         #print "Hi Will!", self.linErr, self.divErr
         pval = self.P*self.linErr + self.D*self.divErr
         if(pval>=self.cap):  
