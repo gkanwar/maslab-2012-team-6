@@ -15,7 +15,7 @@ class ControlBlargh(Blargh):
         # Old values
         #self.anglePID = PID((30,0,0))
         #self.drivePID = PID((.04,0,0))
-        self.anglePID = PID((.5,0,0), .5)
+        self.anglePID = PID((.5,0,0), .75)
         self.drivePID = PID((.5,0,0), .75)
         self.goal = None
         self.maxMotorSpeed = 1
@@ -106,7 +106,7 @@ class PID:
         if(pval>=self.cap):  
             pval = self.cap
         if(pval<=-self.cap):
-            pval = self.cap
+            pval = -self.cap
         return pval
     def reset( self ):
         self.startTime = time.time()
