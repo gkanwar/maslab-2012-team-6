@@ -188,7 +188,7 @@ class TurnState(State):
             irData = worldWrapper.world.irData;
             if (irData.left 
 '''
-            
+
 # Collect state actually contains a state machine
 class FindBallState(State):
     def __init__(self, worldWrapper):
@@ -281,6 +281,8 @@ class MusicPlayer(threading.Thread):
 # Special state that we start out and end in
 class DeadState(State):
 
+    DEAD_STATE_FLAG = 1
+
     # Don't do anything until button push.
     def step(self, worldWrapper):
         world = worldWrapper.world
@@ -292,4 +294,4 @@ class DeadState(State):
             return FindBallState(worldWrapper), STATE_CHANGE_FLAG
         else:
             # Stay in DeadState and output a goal that we're already at, so we don't move
-            return self, 1 # "Haha, it looks like an owl" -- The Great Ryan Andrew Cheu    
+            return self, self.DEAD_STATE_FLAG # "Haha, it looks like an owl" -- The Great Ryan Andrew Cheu    
