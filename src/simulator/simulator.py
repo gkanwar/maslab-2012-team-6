@@ -291,8 +291,7 @@ class Robot(Object):
                 elif(irSensorNum == 1):
                     if(x > 0 and x < smallest):
                         smallest = x
-
-        return smallest - self.radius
+        return (smallest - self.radius)/(5)
 
     # Simulates setting a motor speed
     def setMotorSpeed(self, motorNum, speed):
