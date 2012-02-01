@@ -4,6 +4,7 @@
 
 // Specify the chars for the modes
 #define motorChar 'M'
+#define stepperChar 'T'
 #define servoChar 'S'
 #define digitalChar 'D'
 #define analogChar 'A'
@@ -16,8 +17,36 @@
 void* operator new(size_t size) { return malloc(size); }
 void operator delete(void* ptr) { free(ptr); } 
 
+
+// Defines a class that manages a stepper
+class Stepper
+{
+  public:
+    int dirPin, stepPin;
+    Stepper(int dir, int step)
+    {
+      stepPin = dir;
+      dirPin = step;
+    }
+    void step(boolean dir, int steps)
+    {
+      digitalWrite(dirPin, dir);
+      for (int i = 0; i < steps; i++)
+      {
+        digitalWrite(stepPin, HIGH);
+        delayMicroseconds(100);
+        digitalWrite(stepPin, LOW);
+        delayMicroseconds(100);
+      }
+    }
+};
+
+
+
 // Dynamic array of all the motor controllers
 CompactQik2s9v1** mc;
+// Dynamic array of all the stepper motors
+Stepper** stepper;
 // Dynamic array of all the servo ports
 Servo** servo;
 // Dynamic array of all the digital ports
@@ -27,9 +56,12 @@ int* analogPorts;
 
 // Keeps track of how many of each thing we have
 int numMCs = 0;
+int numSteppers = 0;
 int numServos = 0;
 int numDigital = 0;
 int numAnalog = 0;
+
+
 
 // The dynamically sized return string
 char* retVal;
@@ -102,7 +134,38 @@ void motorInit()
     tempMC->begin();
     tempMC->getError();
     tempMC->stopBothMotors();
+    // Set the stop on error to false
+    tempSerial->print(0x84, BYTE);
+    tempSerial->print(2, BYTE);
+    tempSerial->print(0);
     mc[i] = tempMC;
+  }
+}
+
+// Handles the stepper initialization
+void stepperInit()
+{
+  Stepper* tempStepper;
+
+  // Free up the previously allocated memory
+  for (int i = 0; i < numSteppers; i++)
+  {
+    free(stepper[i]);
+  }
+  free(stepper);
+
+  // Read in the new numSteppers
+  numSteppers = (int) serialRead() - 1;
+  // Reallocate the stepper array
+  stepper = (Stepper**) malloc(sizeof(Stepper*) * numSteppers);
+  for (int i = 0; i < numSteppers; i++)
+  {
+    // Read in the dirPin and stepPin
+    int dirPin = (int) serialRead();
+    int stepPin = (int) serialRead();
+    // Create the Stepper object and store it in the array
+    tempStepper = new Stepper(dirPin, stepPin);
+    stepper[i] = tempStepper;
   }
 }
 
