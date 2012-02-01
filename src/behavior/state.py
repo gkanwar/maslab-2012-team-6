@@ -349,10 +349,10 @@ class EscapeState(State):
             return newState, changed
 
         # Set our goal based on time
-        #if (worldWrapper.time - self.startTime < self.BACKUP_TIME):
-        #    goal = EscapeState.BACKUP_GOAL
-        #else:
-        goal = EscapeState.TURN_GOAL
+        if (worldWrapper.time - self.startTime < self.BACKUP_TIME):
+            goal = EscapeState.BACKUP_GOAL
+        else:
+            goal = EscapeState.TURN_GOAL
 
         # If we've hit the timeout, switch to driving straight.
         if (worldWrapper.time - self.startTime > self.BACKUP_TIME + self.TURN_TIME):

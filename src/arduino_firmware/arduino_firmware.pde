@@ -138,6 +138,9 @@ void motorInit()
     tempSerial->print(0x84, BYTE);
     tempSerial->print(2, BYTE);
     tempSerial->print(0);
+    tempSerial->print(0x84, BYTE);
+    tempSerial->print(3, BYTE);
+    tempSerial->print(0);
     mc[i] = tempMC;
   }
 }
