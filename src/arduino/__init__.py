@@ -69,6 +69,11 @@ class ArduinoInterfaceWrapper():
         return self.conn.recv()
 
     def setMotorSpeed(self, motorNum, speed):
+        import math
+        from exceptions import ValueError
+        if math.isnan(speed):
+            print "HOLY SHIT NANNNNNNNNUUUUUUUUU"
+            return "DONE"
         self.conn.send(("MOTOR", (motorNum, speed)))
         return self.conn.recv()
 
@@ -138,12 +143,10 @@ class ArduinoWrapper():
     def getIRSensorDist(self, irNum):
         return self.irSensors[irNum].dist()
     def getBumpSensorHit(self, bumpNum):
-        print [b.hit() for b in self.bumpSensors]
         return self.bumpSensors[bumpNum].hit()
     def setMotorSpeed(self, motorNum, speed):
-        if not math.isnan(speed):
-            speed *= 126
-            self.motors[motorNum].setVal(int(speed))
+        speed *= 126
+        self.motors[motorNum].setVal(int(speed))
     def setServoAngle(self, servoNum, angle):
         self.servos[servoNum].setAngle(angle)
 
