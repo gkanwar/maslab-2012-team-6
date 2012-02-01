@@ -29,17 +29,17 @@ class ControlBlargh(Blargh):
 
     def step(self, goal):
 
-        #self.arduinoInterface.setMotorSpeed(2, self.rollerSpeed)
-
         if not goal == None:
             self.goal = goal
             if self.goal == STATE_CHANGE_FLAG:
                 print "Changing States!"
+                self.arduinoInterface.setMotorSpeed(2, self.rollerSpeed)
                 self.anglePID.reset()
             elif self.goal == DEAD_STATE_FLAG:
-                #self.arduinoInterface.setMotorSpeed(2, 0)
+                self.arduinoInterface.setMotorSpeed(2, 0)
                 goal = (0,0)
             else:
+                self.arduinoInterface.setMotorSpeed(2, self.rollerSpeed)
                 r, theta = self.goal
                 # Make sure theta is between -pi and pi to avoid spinning in circles.
                 while theta > pi:
@@ -71,6 +71,8 @@ class ControlBlargh(Blargh):
                     motor0Speed = capVal(aval, self.maxMotorSpeed, -self.maxMotorSpeed)
                     motor1Speed = capVal(-aval, self.maxMotorSpeed, -self.maxMotorSpeed)
 
+                self.arduinoInterface.setMotorSpeed(0, motor0Speed)
+                self.arduinoInterface.setMotorSpeed(1, motor1Speed)
 
 class PID:
 
@@ -97,7 +99,7 @@ class PID:
         """
 
         #print "Hi Will!", self.linErr, self.divErr
-        pval = self.P*self.linErr + self.D*self.divErr
+        pval = self.P*self.linErr # + self.D*self.divErr
         if(pval>=self.cap):  
             pval = self.cap
         if(pval<=-self.cap):

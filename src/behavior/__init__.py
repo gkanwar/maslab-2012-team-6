@@ -27,7 +27,7 @@ class BehaviorBlargh(Blargh):
     def __init__(self):
         # Set up the State Machine.
         self.worldWrapper = WorldWrapper()
-        self.stateMachine = StateMachine(CollectState(self.worldWrapper))
+        self.stateMachine = StateMachine(DeadState(self.worldWrapper))
 
     def step(self, world):
         # Update the model of the world, then act on it.
