@@ -286,7 +286,7 @@ class FollowWallState(State):
     TURNING_GOAL_R = (20, pi/24)
     TURN_TIME = 1.0
     WALL_FOLLOW_FAR = 10
-    WALL_FOLLOW_CLOSE = 4
+    WALL_FOLLOW_CLOSE = 6
     WALL_FOLLOW_BREAK = 20
 
 
