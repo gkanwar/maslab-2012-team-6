@@ -249,7 +249,7 @@ class ImageProcessing
 	    }
 	    else
 	    {
-	        centerYellowT = -1; 
+	        centerYellowT = 100; 
 	    }
 	      
 	      

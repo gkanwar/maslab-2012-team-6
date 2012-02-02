@@ -45,7 +45,7 @@ class Simulator:
         # Initialize variables
         self.size = Vector( 300, 170 )
 
-        self.walls = makeWalls( [ Vector(10,10), Vector(290,10), Vector(290,160), Vector( 10, 160 ), Vector( 10, 10 ) ] )+ makeWalls( [ Vector(80,90), Vector(20,30), Vector( 0, 100 ), Vector( 80,90 ) ] ) 
+        self.walls = makeWalls( [ Vector(60,10), Vector(290,10), Vector(290,160), Vector( 10, 160 ), Vector( 30, 100 ), Vector( 30, 40 ), Vector( 60, 10 )], [5] )
         self.robot = Robot( scale( .5, self.size ), 0, self.walls )
         #self.balls = [Ball( Vector(random.randint(0, int( self.size.x ) ),
          #                   random.randint(0, int( self.size.y ) ) ),
@@ -306,20 +306,33 @@ class Robot(Object):
         # TODO: Implement this
         raise NotImplementedError
 
-def makeWalls( points ):
+def makeWalls( points, yellowWalls ):
     walls = []
     for i in range( len(points) - 1 ):
-        walls.append( Wall( points[i], points[i+1] ) )
+        if i in yellowWalls:
+            color = Wall.COLOR_YELLOW
+        else:
+            color = Wall.COLOR_WHITE
+        walls.append( Wall( points[i], points[i+1], color ) )
     return walls
 
 class Wall(Object):
-    def __init__(self, start, end):
+    
+    COLOR_WHITE = 0
+    COLOR_YELLOW = 1
+
+    def __init__(self, start, end, color):
         self.start = start
         self.end = end
+        self.color = color
     def step(self):
         pass
     def draw( self, screen ):
-        pygame.draw.line(screen, (0, 255, 0),
+        if self.color == self.COLOR_WHITE:
+            fuckingColor = (255, 255, 255)
+        else:
+            fuckingColor = (255, 255, 0)
+        pygame.draw.line(screen, fuckingColor,
                               (int(PIXELS_PER_INCH * self.start.x),
                                int(PIXELS_PER_INCH * self.start.y)),
                               (int(PIXELS_PER_INCH * self.end.x),
@@ -332,7 +345,10 @@ def localize( wall, obj ):
     end = toVector( (rEnd, thetaEnd) )
 
     # Calculate the standard form mx+b
-    m = float( start.y - end.y ) /float( start.x - end.x )
+    if (start.x == end.x):
+        m = float("inf")
+    else:
+        m = float( start.y - end.y ) /float( start.x - end.x )
     b = start.y - m * start.x
     
     # r = x * cos( theta ) + y * sin( theta )

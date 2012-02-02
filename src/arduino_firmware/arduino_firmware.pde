@@ -11,7 +11,7 @@
 #define initChar 'I'
 #define doneChar ';'
 // The motor controller reset pin (not currently used)
-#define mcResetPin 5
+#define mcResetPin 53
 
 // Implement the new and delete operators
 void* operator new(size_t size) { return malloc(size); }
@@ -64,6 +64,7 @@ int numServos = 0;
 int numDigital = 0;
 int numAnalog = 0;
 
+int resetCounter = 0;
 
 
 // The dynamically sized return string
@@ -425,6 +426,16 @@ void setMotorSpeed(int index, int s)
 // based on that.
 void moveMotors()
 {
+  if (resetCounter > 50)
+  {
+    resetCounter = 0;
+    for (int i = 0; i < numMCs; i++)
+    {
+      mc[i]->begin();
+      mc[i]->getError();
+    }
+  }
+  
   // Read in (and cast to an int) the number of motors
   int numMotors = (int) serialRead() - 1;
   // Per motor, read in the speed and call setMotorSpeed to actually
