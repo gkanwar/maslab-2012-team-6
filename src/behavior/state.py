@@ -289,6 +289,7 @@ class TurnState(State):
         if(changed == STATE_CHANGE_FLAG):
             return newState, changed
 
+        # Check for yellow wall, and change states if the time is greater than 150
         newState,changed = self.checkForYellow(worldWrapper)
         if changed == STATE_CHANGE_FLAG:
             return newState, changed
