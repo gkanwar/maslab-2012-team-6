@@ -172,7 +172,7 @@ class AlignToWall(State):
     GOOD_DIST = 6
     TIMEOUT = 10
     # Threshold for equality between IRs before aligned
-    ALIGN_THRESH = 2
+    ALIGN_THRESH = 1
     
 
     def __init__(self, worldWrapper):
@@ -201,13 +201,13 @@ class AlignToWall(State):
                 return newState, changed
 
             goal = self.TURN_GOAL0
-            if((world.irData != None  and (world.irData.leftFront <= self.GOOD_DIST or world.irData.leftSide <= self.GOOD_DIST) and abs(world.irData.leftFront - world.irData.leftSide) < self.ALIGN_THRESH) or worldWrapper.time - self.startTime > self.TURN_TIME):
+            if((world.irData != None  and (world.irData.leftFront <= self.GOOD_DIST or world.irData.leftSide <= self.GOOD_DIST) and abs(world.irData.leftFront - world.irData.leftSide) < self.ALIGN_THRESH) and worldWrapper.time - self.startTime > self.TURN_TIME):
                 print "Aligned"
                 return FollowWallState(worldWrapper), STATE_CHANGE_FLAG
 
         # Check Timeout
         if(worldWrapper.time - self.startTime > self.TIMEOUT):
-            return EscapeState(worldWrapper), STATE_CHANGE_FLAG
+            return FollowWallState(worldWrapper), STATE_CHANGE_FLAG
         self.lastTime = worldWrapper.time
         return self, goal
             
