@@ -22,14 +22,16 @@ void operator delete(void* ptr) { free(ptr); }
 class Stepper
 {
   public:
-    int dirPin, stepPin;
-    Stepper(int dir, int step)
+    int dirPin, stepPin, enablePin;
+    Stepper(int dir, int step, int enable)
     {
-      stepPin = dir;
-      dirPin = step;
+      stepPin = step;
+      dirPin = dir;
+      enablePin = enable;
     }
     void step(boolean dir, int steps)
     {
+      digitalWrite(enablePin, LOW);
       digitalWrite(dirPin, dir);
       for (int i = 0; i < steps; i++)
       {
@@ -38,6 +40,7 @@ class Stepper
         digitalWrite(stepPin, LOW);
         delayMicroseconds(100);
       }
+      digitalWrite(enablePin, HIGH);
     }
 };
 
@@ -163,11 +166,12 @@ void stepperInit()
   stepper = (Stepper**) malloc(sizeof(Stepper*) * numSteppers);
   for (int i = 0; i < numSteppers; i++)
   {
-    // Read in the dirPin and stepPin
+    // Read in the dirPin, stepPin, and enablePin
     int dirPin = (int) serialRead();
     int stepPin = (int) serialRead();
+    int enablePin = (int) serialRead();
     // Create the Stepper object and store it in the array
-    tempStepper = new Stepper(dirPin, stepPin);
+    tempStepper = new Stepper(dirPin, stepPin, enablePin);
     stepper[i] = tempStepper;
   }
 }
@@ -231,6 +235,9 @@ void initAll()
     {
       case motorChar:
         motorInit();
+        break;
+      case stepperChar:
+        stepperInit();
         break;
       case servoChar:
         servoInit();
@@ -296,11 +303,18 @@ void loop()
           initAll();
           return;
           break;
+
         case motorChar:
           // Process the next characters and use them to set motor
           // speeds
           moveMotors();
           break;
+
+	case stepperChar:
+	  // Process the next charaters and use them to set stepper
+	  // steps
+	  stepSteppers();
+	  break;
   
         case servoChar:
           // Process the next characters and use them to set servo
@@ -421,6 +435,18 @@ void moveMotors()
     int s = (int) in - 1;
     // Set the motor speed for the ith motor
     setMotorSpeed(i, s);
+  }
+}
+
+void stepSteppers()
+{
+  // Read in (and cast to an int) the number of steppers
+  int numSteppers = (int) serialRead() - 1;
+  // Per stepper, read in the steps and step it
+  for (int i = 0; i < numSteppers; i++)
+  {
+    int steps = (int) serialRead() - 1;
+    stepper[i]->step(true, steps);
   }
 }
 
