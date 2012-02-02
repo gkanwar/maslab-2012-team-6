@@ -47,10 +47,11 @@ class Simulator:
 
         self.walls = makeWalls( [ Vector(10,10), Vector(290,10), Vector(290,160), Vector( 10, 160 ), Vector( 10, 10 ) ] )+ makeWalls( [ Vector(80,90), Vector(20,30), Vector( 0, 100 ), Vector( 80,90 ) ] ) 
         self.robot = Robot( scale( .5, self.size ), 0, self.walls )
-        self.balls = [Ball( Vector(random.randint(0, int( self.size.x ) ),
-                            random.randint(0, int( self.size.y ) ) ),
-                            self.robot)
-                      for i in range(12)]
+        #self.balls = [Ball( Vector(random.randint(0, int( self.size.x ) ),
+         #                   random.randint(0, int( self.size.y ) ) ),
+          #                  self.robot)
+           #           for i in range(12)]
+        self.balls = []
         self.objects = []
         self.objects.extend(self.balls)
         self.objects.extend(self.walls)
