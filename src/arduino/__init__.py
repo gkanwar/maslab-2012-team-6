@@ -153,8 +153,8 @@ class IRSensor(AnalogSensor):
         if val == None:
             return None
 
-        # Map voltages to distance by a linear fit
-        return 0.0183374 * (701 - val)
+        # Map voltages to distance by a quartic fit
+        return 3.36863*10**-9*val**4-4.09778*10**-6*val**3+0.00181883*val**2-0.364703*val+32.3633
 
 # A wrapper class for a bump sensor
 class BumpSensor(DigitalSensor):

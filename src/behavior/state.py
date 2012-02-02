@@ -34,7 +34,8 @@ class State(object):
         return None,None
 
     def checkForBalls(self, worldWrapper):
-        if len(worldWrapper.world.balls) > 0:
+        if False:#len(worldWrapper.world.balls) > 0:
+            print "BALLS BALLS!"
             return BallAcquisitionState(worldWrapper), STATE_CHANGE_FLAG
         return None,None
 
@@ -132,73 +133,80 @@ class BallAcquisitionState(State):
         return self, self.stateMachine.goal
 
 class DriveToWallState(State):
-    TIMEOUT = 50;
-    GOAL = (20,0);
-    GOOD_DIST = 5;
+    TIMEOUT = 50
+    GOAL = (20,0)
+    GOOD_DIST = 5
     def __init__(self, worldWrapper):
-        self.lastTime = worldWrapper.time;
-        self.startTime = worldWrapper.time;
+        self.lastTime = worldWrapper.time
+        self.startTime = worldWrapper.time
     def step(self, worldWrapper):
-        world = worldWrapper.world;
+        world = worldWrapper.world
         newState,changed = self.checkGlobal(worldWrapper,False)
         if(changed == STATE_CHANGE_FLAG):
-            return newState, changed;
+            return newState, changed
 
         newState,changed = self.checkForBalls(worldWrapper)
         if(changed == STATE_CHANGE_FLAG):
-            return newState, changed;
+            return newState, changed
 
 
         self.lastTime = worldWrapper.time
 
-        if (self.startTime - worldWrapper.time >= self.TIMEOUT):
-            return EscapeState(worldWrapper), STATE_CHANGE_FLAG;
+        if(self.startTime - worldWrapper.time >= self.TIMEOUT):
+            return EscapeState(worldWrapper), STATE_CHANGE_FLAG
         if(random.random() < timeEqualizedRandom(self.lastTime, worldWrapper.time, 0.20)):
-            return TurnState(worldWrapper), STATE_CHANGE_FLAG;
-        if( world.bumpData != None and (world.bumpData.left  or world.bumpData.right)):
-            return AllignToWall(worldWrapper), STATE_CHANGE_FLAG;
+            return TurnState(worldWrapper), STATE_CHANGE_FLAG
+        if(world.bumpData != None and (world.bumpData.left  or world.bumpData.right)):
+            return AlignToWall(worldWrapper), STATE_CHANGE_FLAG
         if(world.irData != None and (world.irData.left < self.GOOD_DIST or world.irData.right < self.GOOD_DIST)):
-            return FollowWallState(worldWrapper), STATE_CHANGE_FLAG;
+            return FollowWallState(worldWrapper), STATE_CHANGE_FLAG
 
         return self, self.GOAL
 
-class AllignToWall(State):
-    BACKUP_TIME = 1;
-    BACKUP_GOAL = (-20,0)
-    TURN_GOAL = (0,pi/12)
-    GOOD_DIST = 5;
-    TIMEOUT = 50;
+class AlignToWall(State):
+    BACKUP_TIME = 0.75
+    BACKUP_GOAL = (-20, 0)
+    TURN_GOAL0 = (0, pi/4)
+    TURN_GOAL1 = (0, -pi/4)
+    GOOD_DIST = 6
+    TIMEOUT = 10
 
-    def __init__(self, worldWrapper):
-        self.lastTime = worldWrapper.time;
-        self.startTime = worldWrapper.time;
+    def __init__(self, worldWrapper, wallFollowed = 0):
+        self.lastTime = worldWrapper.time
+        self.startTime = worldWrapper.time
+        self.wallFollowed = wallFollowed
     def step(self, worldWrapper):
-        world = worldWrapper.world;
+        world = worldWrapper.world
         
         # Check for Balls
         newState,changed = self.checkForBalls(worldWrapper)
         if(changed == STATE_CHANGE_FLAG):
-            return newState, changed;
+            return newState, changed
         
         # Backup
         if(worldWrapper.time - self.startTime < self.BACKUP_TIME):
             newState, changed = self.checkGlobal(worldWrapper, False)
             if(changed == STATE_CHANGE_FLAG):
-                return newState, changed;
-            goal = self.BACKUP_GOAL;
+                return newState, changed
+            goal = self.BACKUP_GOAL
         
         # Turn
         else:
             newState, changed = self.checkGlobal(worldWrapper)
-            if(changed == STATE_CHANGE_FLAG):                return newState, changed;
-            goal = self.TURN_GOAL;
+            if(changed == STATE_CHANGE_FLAG):                
+                return newState, changed
+            if (self.wallFollowed == 0):
+                goal = self.TURN_GOAL0
+            else:
+                goal = self.TURN_GOAL1
             if(world.irData != None  and (world.irData.left <= self.GOOD_DIST or world.irData.right <= self.GOOD_DIST)):
+                print "In good dist"
                 return FollowWallState(worldWrapper), STATE_CHANGE_FLAG
 
         # Check Timeout
         if(worldWrapper.time - self.startTime > self.TIMEOUT):
             return EscapeState(worldWrapper), STATE_CHANGE_FLAG
-        self.lastTime = worldWrapper.time;
+        self.lastTime = worldWrapper.time
         return self, goal
             
 
@@ -228,7 +236,7 @@ class DriveStraightState(State):
         # TODO: Check this and tweak it for optimal performance
         if random.random() < timeEqualizedRandom(self.lastTime, worldWrapper.time, 0.20):
             return TurnState(worldWrapper), STATE_CHANGE_FLAG
-        if random.random() < timeEqualizedRandom(self.lastTime, worldWrapper.time, 0.20):
+        if random.random() < timeEqualizedRandom(self.lastTime, worldWrapper.time, 0.99):
             return DriveToWallState(worldWrapper), STATE_CHANGE_FLAG
 
         # Otherwise, full steam ahead.
@@ -248,12 +256,12 @@ class TurnState(State):
         # Check our global conditions
         newState, changed = self.checkGlobal(worldWrapper)
         if(changed == STATE_CHANGE_FLAG):
-            return newState, changed;
+            return newState, changed
         
         # Check for balls
         newState,changed = self.checkForBalls(worldWrapper)
         if(changed == STATE_CHANGE_FLAG):
-            return newState, changed;
+            return newState, changed
 
         # Set the goal location
         goal = TurnState.GOAL
@@ -270,45 +278,55 @@ class TurnState(State):
 
 class FollowWallState(State):
     
-    STRAIGHT_GOAL = (20, 0);
-    TURNING_GOAL_L = (20, pi/6);
-    TURNING_GOAL_R = (20, -pi/6);
-    WALL_FOLLOW_FAR = 8;
-    WALL_FOLLOW_CLOSE = 3;
-    WALL_FOLLOW_BREAK = 11;
+    STRAIGHT_GOAL = (20, 0)
+    TURNING_GOAL_L = (20, pi/6)
+    TURNING_GOAL_R = (20, -pi/6)
+    WALL_FOLLOW_FAR = 8
+    WALL_FOLLOW_CLOSE = 3
+    WALL_FOLLOW_BREAK = 11
+    wall_followed = 0 #0 for left, 1 for right
     
     def __init__(self,worldWrapper):
-        self.lastTime = worldWrapper.time;
+        self.lastTime = worldWrapper.time
+        self.wall_followed = 0
     def step(self, worldWrapper):
         # Check for deadness, bump sensors
-        newState, changed = self.checkGlobal(worldWrapper)
+        newState, changed = self.checkGlobal(worldWrapper,False)
         if (changed == STATE_CHANGE_FLAG):
-            return newState, changed;
+            return newState, changed
         # Check for balls 
         newState,changed = self.checkForBalls(worldWrapper)
         if(changed == STATE_CHANGE_FLAG):
-            return newState, changed;
+            return newState, changed
+        
+        if(worldWrapper.world.bumpData != None and
+           (worldWrapper.world.bumpData.left or
+            worldWrapper.world.bumpData.right)):
+            return AlignToWall(worldWrapper, self.wall_followed, True), STATE_CHANGE_FLAG
 
         if not worldWrapper.world.irData == None:
-            irData = worldWrapper.world.irData;
+            irData = worldWrapper.world.irData
             '''
             if(random.random() < timeEqualizedRandom(self.lastTime, worldWrapper.time, 0.10)):
                    return TurnState(worldWrapper), STATE_CHANGE_FLAG
             '''
             #BLOCK OF LOGIC
-            if((irData.left <= self.WALL_FOLLOW_FAR and irData.left >= self.WALL_FOLLOW_CLOSE) or
-                (irData.right<= self.WALL_FOLLOW_FAR and irData.right>= self.WALL_FOLLOW_CLOSE)):
-                    return self, (20,0);
+            if(irData.left <= self.WALL_FOLLOW_FAR and irData.left >= self.WALL_FOLLOW_CLOSE):
+                self.wall_followed = 0
+                return self, self.STRAIGHT_GOAL
+            if(irData.right<= self.WALL_FOLLOW_FAR and irData.right>= self.WALL_FOLLOW_CLOSE):
+                self.wall_followed = 1
+                return self, self.STRAIGHT_GOAL
             elif(irData.left > self.WALL_FOLLOW_BREAK and irData.right > self.WALL_FOLLOW_BREAK):
-                   return DriveStraightState(worldWrapper), STATE_CHANGE_FLAG;
+                return DriveStraightState(worldWrapper), STATE_CHANGE_FLAG
             elif(irData.left > self.WALL_FOLLOW_FAR and irData.left < self.WALL_FOLLOW_BREAK):
-                   return self, self.TURNING_GOAL_L;
+                return self, self.TURNING_GOAL_L
             elif(irData.left < self.WALL_FOLLOW_CLOSE):
-                   return self, self.TURNING_GOAL_R;
+                return self, self.TURNING_GOAL_R
             elif(irData.right > self.WALL_FOLLOW_FAR and irData.right < self.WALL_FOLLOW_BREAK):
-                   return self, self.TURNING_GOAL_R;
+                return self, self.TURNING_GOAL_R
             elif(irData.right < self.WALL_FOLLOW_CLOSE):
-                   return self, self.TURNING_GOAL_L;
+                return self, self.TURNING_GOAL_L
 
 # Collect state actually contains a state machine
 class FindBallState(State):
@@ -374,8 +392,8 @@ class ScoreState(State):
 # If this is getting called, we're in some sort of bind. Try and get us out of it.
 class EscapeState(State):
     # Constants
-    BACKUP_TIME = 2
-    TURN_TIME = 2
+    BACKUP_TIME = 1
+    TURN_TIME = 1
     BACKUP_GOAL = (-20, 0)
     TURN_GOAL = (0, pi/4)
 

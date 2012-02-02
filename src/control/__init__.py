@@ -18,11 +18,11 @@ class ControlBlargh(Blargh):
         self.arduinoInterface = arduinoInterface
         self.angleThreshold = pi / 16
         self.driveThreshold = .3
-        self.rollerSpeed = 50
+        self.rollerSpeed = 100
         # Old values
         #self.anglePID = PID((30,0,0))
         #self.drivePID = PID((.04,0,0))
-        self.anglePID = PID((.5,0,0), .75)
+        self.anglePID = PID((1,0,0), .75)
         self.drivePID = PID((.5,0,0), .75)
         self.goal = None
         self.maxMotorSpeed = 1
