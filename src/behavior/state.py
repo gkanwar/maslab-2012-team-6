@@ -158,7 +158,7 @@ class DriveToWallState(State):
         if( world.bumpData != None and (world.bumpData.left  or world.bumpData.right)):
             return AllignToWall(worldWrapper), STATE_CHANGE_FLAG;
         if(world.irData != None and (world.irData.left < self.GOOD_DIST or world.irData.right < self.GOOD_DIST)):
-            return FollowWallState(worldWrapper), STATE_CHANG_EFLAG;
+            return FollowWallState(worldWrapper), STATE_CHANGE_FLAG;
 
         return self, self.GOAL
 

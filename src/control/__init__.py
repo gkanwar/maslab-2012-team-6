@@ -36,8 +36,9 @@ class ControlBlargh(Blargh):
                 self.arduinoInterface.setMotorSpeed(2, self.rollerSpeed)
                 self.anglePID.reset()
             elif self.goal == DEAD_STATE_FLAG:
+                self.arduinoInterface.setMotorSpeed(0, 0)
+                self.arduinoInterface.setMotorSpeed(1, 0) 
                 self.arduinoInterface.setMotorSpeed(2, 0)
-                goal = (0,0)
             else:
                 self.arduinoInterface.setMotorSpeed(2, self.rollerSpeed)
                 r, theta = self.goal

@@ -8,11 +8,11 @@ class World:
         self.irData = None
         self.bumpData = None
         self.wallInFront = False
-        self.yellowPos = -1
+        self.yellowTheta = -1
     def updateBalls(self, balls):
         self.balls = balls
-    def updateYellowPos(self, position):
-        self.yellowPos = position
+    def updateYellowTheta(self, yellowTheta):
+        self.yellowTheta = yellowTheta
     def updateBumpData(self, bumpData):
         self.bumpData = bumpData
     def updateIRData(self, irData):
@@ -37,8 +37,9 @@ class WorldBlargh(Blargh):
             if (command == self.VISION):
                 if args == None:
                     return None
-                self.world.updateBalls(args[0])
-                self.world.updateYellowPos(args[1])
+                balls, yellowTheta = args
+                self.world.updateBalls(balls)
+                self.world.updateYellowTheta(yellowTheta)
 
             elif(command == self.INPUT):
                 bumpData, irData = args
@@ -46,7 +47,5 @@ class WorldBlargh(Blargh):
                     self.world.updateBumpData(bumpData)
                 if irData != None:
                     self.world.updateIRData(irData)
-	b = self.world.bumpData
-        #if b != None:
-            #print [b.left, b.right, b.back, b.power]
+
         return self.world
