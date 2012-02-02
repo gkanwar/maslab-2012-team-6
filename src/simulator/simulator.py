@@ -45,7 +45,7 @@ class Simulator:
         # Initialize variables
         self.size = Vector( 300, 170 )
 
-        self.walls = makeWalls( [ Vector(10,10), Vector(290,10), Vector(290,160), Vector( 10, 160 ), Vector( 10, 10 ), Vector( 20, 30 ), Vector( 30, 40 )], [2,3] )
+        self.walls = makeWalls( [ Vector(60,10), Vector(290,10), Vector(290,160), Vector( 10, 160 ), Vector( 30, 100 ), Vector( 30, 40 ), Vector( 60, 10 )], [5] )
         self.robot = Robot( scale( .5, self.size ), 0, self.walls )
         #self.balls = [Ball( Vector(random.randint(0, int( self.size.x ) ),
          #                   random.randint(0, int( self.size.y ) ) ),
@@ -345,7 +345,10 @@ def localize( wall, obj ):
     end = toVector( (rEnd, thetaEnd) )
 
     # Calculate the standard form mx+b
-    m = float( start.y - end.y ) /float( start.x - end.x )
+    if (start.x == end.x):
+        m = float("inf")
+    else:
+        m = float( start.y - end.y ) /float( start.x - end.x )
     b = start.y - m * start.x
     
     # r = x * cos( theta ) + y * sin( theta )
