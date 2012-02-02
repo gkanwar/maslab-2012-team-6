@@ -134,6 +134,7 @@ class BallAcquisitionState(State):
 class DriveToWallState(State):
     TIMEOUT = 50;
     GOAL = (20,0);
+    GOOD_DIST = 5;
     def __init__(self, worldWrapper):
         self.lastTime = worldWrapper.time;
         self.startTime = worldWrapper.time;
@@ -154,9 +155,10 @@ class DriveToWallState(State):
             return EscapeState(worldWrapper), STATE_CHANGE_FLAG;
         if(random.random() < timeEqualizedRandom(self.lastTime, worldWrapper.time, 0.20)):
             return TurnState(worldWrapper), STATE_CHANGE_FLAG;
-        if(world.bumpData.left  or world.bumpData.right):
-            print "bumppy"
+        if( world.bumpData != None and (world.bumpData.left  or world.bumpData.right)):
             return AllignToWall(worldWrapper), STATE_CHANGE_FLAG;
+        if(world.irData != None and (world.irData.left < self.GOOD_DIST or world.irData.right < self.GOOD_DIST)):
+            return FollowWallState(worldWrapper), STATE_CHANG_EFLAG;
 
         return self, self.GOAL
 
@@ -164,7 +166,7 @@ class AllignToWall(State):
     BACKUP_TIME = 1;
     BACKUP_GOAL = (-20,0)
     TURN_GOAL = (0,pi/12)
-    GOOD_DIST = 6;
+    GOOD_DIST = 5;
     TIMEOUT = 50;
 
     def __init__(self, worldWrapper):
@@ -190,7 +192,7 @@ class AllignToWall(State):
             newState, changed = self.checkGlobal(worldWrapper)
             if(changed == STATE_CHANGE_FLAG):                return newState, changed;
             goal = self.TURN_GOAL;
-            if(world.irData.left <= self.GOOD_DIST or world.irData.right <= self.GOOD_DIST):
+            if(world.irData != None  and (world.irData.left <= self.GOOD_DIST or world.irData.right <= self.GOOD_DIST)):
                 return FollowWallState(worldWrapper), STATE_CHANGE_FLAG
 
         # Check Timeout
@@ -226,6 +228,8 @@ class DriveStraightState(State):
         # TODO: Check this and tweak it for optimal performance
         if random.random() < timeEqualizedRandom(self.lastTime, worldWrapper.time, 0.20):
             return TurnState(worldWrapper), STATE_CHANGE_FLAG
+        if random.random() < timeEqualizedRandom(self.lastTime, worldWrapper.time, 0.20):
+            return DriveToWallState(worldWrapper), STATE_CHANGE_FLAG
 
         # Otherwise, full steam ahead.
         else:
