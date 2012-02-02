@@ -1,4 +1,4 @@
-1;3001;0cimport random
+import random
 import os
 import threading
 import time
