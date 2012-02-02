@@ -327,8 +327,45 @@ class FindBallState(State):
 
 # TODO: Flesh this out
 class ScoreState(State):
-    def __init__(self):
-        pass
+
+    FORWARD_GOAL = 5
+    BACKUP_GOAL = 5
+    TURN_GOAL = 2
+    BACKUP_TIME = 2
+    TURN_TIME = 4
+
+    def __init__(self, worldWrapper):
+        self.startTime = time.time()
+        self.aligning = False
+        self.dumping = False
+        self.turnGoal = 0
+
+    def step(self, worldWrapper):
+        world = worldWrapper.world
+
+        # Actions
+        if self.aligning and time.time() - self.startTime < BACKUP_TIME:
+            goal = (self.BACKUP_GOAL, 0)
+        elif self.aligning and time.time() - self.startTime < TURN_TIME:
+            goal = (self.turnGoal, 0)
+        else:
+            self.aligning = False
+            yellowTheta = world.yellowTheta
+            goal = (self.FORWARD_GOAL, yellowTheta)    
+
+        # Fake internal transitions
+        if world.bumpData.left and world.bumpData.right:
+            # TODO: DUMP AND STUFF
+            self.startTime = time.time()
+            self.dumping = True
+        elif world.bumpData.left:
+            self.startTime = time.time()
+            self.turnGoal = self.TURN_GOAL
+        elif world.bumpData.right:
+            self.startTime = time.time()
+            self.turnGoal = -self.TURN_GOAL
+        
+        return self, goal
 
 # If this is getting called, we're in some sort of bind. Try and get us out of it.
 class EscapeState(State):
