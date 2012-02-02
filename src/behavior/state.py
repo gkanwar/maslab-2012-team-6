@@ -10,6 +10,8 @@ from util import timeEqualizedRandom, STATE_CHANGE_FLAG
 
 
 STATE_CHANGE_FLAG = 0
+START_TURN_FERROUS_FLAG = 2
+STOP_TURN_FERROUS_FLAG = 3
 
 class State(object):
 
@@ -436,10 +438,10 @@ class ScoreState(State):
         world = worldWrapper.world
 
         # Actions
-        if self.aligning and worldWrapper.time - self.startTime < BACKUP_TIME:
+        if self.aligning and worldWrapper.time - self.startTime < self.BACKUP_TIME:
             goal = (self.BACKUP_GOAL, 0)
-        elif self.aligning and worldWrapper.time - self.startTime < TURN_TIME:
-            goal = (self.turnGoal, 0)
+        elif self.aligning and worldWrapper.time - self.startTime < self.TURN_TIME:
+            goal = (self.TURN_GOAL, 0)
         else:
             self.aligning = False
             yellowTheta = world.yellowTheta
@@ -447,15 +449,15 @@ class ScoreState(State):
 
         # Fake internal transitions
         if world.bumpData.left and world.bumpData.right:
-            # TODO: DUMP AND STUFF
+            goal = (0,TURN_FERROUS_FLAG);
             self.startTime = worldWrapper.time
             self.dumping = True
         elif world.bumpData.left:
             self.startTime = worldWrapper.time
-            self.turnGoal = self.TURN_GOAL
+            self.turnGoal = (0,self.TURN_GOAL)
         elif world.bumpData.right:
             self.startTime = worldWrapper.time
-            self.turnGoal = -self.TURN_GOAL
+            self.turnGoal = (0,-self.TURN_GOAL)
         
         return self, goal
 
@@ -481,7 +483,7 @@ class EscapeState(State):
         if (worldWrapper.time - self.startTime < self.BACKUP_TIME):
             goal = EscapeState.BACKUP_GOAL
         else:
-            goal = EscapeState.TURN_GOAL
+            goalp = EscapeState.TURN_GOAL
 
         # If we've hit the timeout, switch to driving straight.
         if (worldWrapper.time - self.startTime > self.BACKUP_TIME + self.TURN_TIME):
