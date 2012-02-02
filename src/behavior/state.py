@@ -1,4 +1,4 @@
-import random
+1;3001;0cimport random
 import os
 import threading
 import time
@@ -158,7 +158,7 @@ class DriveToWallState(State):
             return TurnState(worldWrapper), STATE_CHANGE_FLAG
         if(world.bumpData != None and (world.bumpData.left  or world.bumpData.right)):
             return AlignToWall(worldWrapper), STATE_CHANGE_FLAG
-        if(world.irData != None and (world.irData.left < self.GOOD_DIST or world.irData.right < self.GOOD_DIST)):
+        if(world.irData != None and world.irData.left < self.GOOD_DIST):
             return FollowWallState(worldWrapper), STATE_CHANGE_FLAG
 
         return self, self.GOAL
@@ -171,12 +171,13 @@ class AlignToWall(State):
     TURN_GOAL1 = (0, -pi/4)
     GOOD_DIST = 6
     TIMEOUT = 10
+    # Threshold for equality between IRs before aligned
+    ALIGN_THRESH = 2
+    
 
-    def __init__(self, worldWrapper, wallFollowed = 0, isFollowing = False):
+    def __init__(self, worldWrapper):
         self.lastTime = worldWrapper.time
         self.startTime = worldWrapper.time
-        self.wallFollowed = wallFollowed
-        self.isFollowing = isFollowing
 
     def step(self, worldWrapper):
         world = worldWrapper.world
@@ -198,15 +199,10 @@ class AlignToWall(State):
             newState, changed = self.checkGlobal(worldWrapper)
             if(changed == STATE_CHANGE_FLAG):                
                 return newState, changed
-            if (self.wallFollowed == 0):
-                goal = self.TURN_GOAL0
-            else:
-                goal = self.TURN_GOAL1
-            if(not self.isFollowing and world.irData != None  and (world.irData.left <= self.GOOD_DIST or world.irData.right <= self.GOOD_DIST)):
-                print "In good dist"
-                return FollowWallState(worldWrapper), STATE_CHANGE_FLAG
-            elif(self.isFollowing and worldWrapper.time - self.startTime > self.TURN_TIME and world.irData != None and (world.irData.left <= self.GOOD_DIST or world.irData.right <= self.GOOD_DIST)):
-                print "In good dist and good time!"
+
+            goal = self.TURN_GOAL0
+            if((world.irData != None  and (world.irData.leftFront <= self.GOOD_DIST or world.irData.leftSide <= self.GOOD_DIST) and abs(world.irData.leftFront - world.irData.leftSide) < self.ALIGN_THRESH) or worldWrapper.time - self.startTime > self.TURN_TIME):
+                print "Aligned"
                 return FollowWallState(worldWrapper), STATE_CHANGE_FLAG
 
         # Check Timeout
@@ -233,6 +229,7 @@ class DriveStraightState(State):
         
         # Check for Balls
         if len(world.balls) > 0:
+            print "Found some balls in drive straight state", world.balls
             return BallAcquisitionState(worldWrapper), STATE_CHANGE_FLAG
 
         # Set our goal
@@ -285,16 +282,25 @@ class TurnState(State):
 class FollowWallState(State):
     
     STRAIGHT_GOAL = (20, 0)
-    TURNING_GOAL_L = (20, pi/6)
-    TURNING_GOAL_R = (20, -pi/6)
-    WALL_FOLLOW_FAR = 8
-    WALL_FOLLOW_CLOSE = 3
-    WALL_FOLLOW_BREAK = 11
-    wall_followed = 0 #0 for left, 1 for right
-    
+    TURNING_GOAL_L = (20, -pi/24)
+    TURNING_GOAL_R = (20, pi/24)
+    TURN_TIME = 1.0
+    WALL_FOLLOW_FAR = 10
+    WALL_FOLLOW_CLOSE = 4
+    WALL_FOLLOW_BREAK = 20
+
+
+    TURNED_THRESH_RIGHT = 1
+    TURNED_THRESH_LEFT = 1
+    TURNED_RIGHT = 0
+    TURNED_LEFT = 1
+    TURNED_STRAIGHT = 2
+
+
     def __init__(self,worldWrapper):
         self.lastTime = worldWrapper.time
-        self.wall_followed = 0
+        self.tooFar = False
+
     def step(self, worldWrapper):
         # Check for deadness, bump sensors
         newState, changed = self.checkGlobal(worldWrapper,False)
@@ -308,31 +314,89 @@ class FollowWallState(State):
         if(worldWrapper.world.bumpData != None and
            (worldWrapper.world.bumpData.left or
             worldWrapper.world.bumpData.right)):
-            return AlignToWall(worldWrapper, self.wall_followed, isFollowing = True), STATE_CHANGE_FLAG
+            return AlignToWall(worldWrapper), STATE_CHANGE_FLAG
 
         if not worldWrapper.world.irData == None:
             irData = worldWrapper.world.irData
+            print irData.leftFront, irData.leftSide
             '''
             if(random.random() < timeEqualizedRandom(self.lastTime, worldWrapper.time, 0.10)):
                    return TurnState(worldWrapper), STATE_CHANGE_FLAG
             '''
+
+            # Determine which direction we're turned in
+            if (irData.leftFront > irData.leftSide + self.TURNED_THRESH_RIGHT):
+                print "We're turned right"
+                turned = self.TURNED_RIGHT
+            elif (irData.leftSide > irData.leftFront + self.TURNED_THRESH_LEFT):
+                print "We're turned left"
+                turned = self.TURNED_LEFT
+            else:
+                print "We're turned straight"
+                turned = self.TURNED_STRAIGHT
+
             #BLOCK OF LOGIC
+            if(turned == self.TURNED_RIGHT):
+                if(irData.leftSide <= self.WALL_FOLLOW_CLOSE):
+                    print "Turned right, too close"
+                    return self, self.TURNING_GOAL_L
+                else:
+                    print "Turned right, just fine"
+                    return self, self.STRAIGHT_GOAL
+            elif(turned == self.TURNED_LEFT):
+                if(irData.leftFront >= self.WALL_FOLLOW_FAR):
+                    print "Turned left, too far"
+                    return self, self.TURNING_GOAL_R
+                else:
+                    print "Turned left, just fine"
+                    return self, self.STRAIGHT_GOAL
+            else:
+                if(irData.leftSide <= self.WALL_FOLLOW_CLOSE or irData.leftFront <= self.WALL_FOLLOW_CLOSE):
+                    print "Straight, too close"
+                    return self, self.TURNING_GOAL_R
+                elif(irData.leftSide >= self.WALL_FOLLOW_FAR or irData.leftFront >= self.WALL_FOLLOW_FAR):
+                    print "Straight, too far"
+                    return self, self.TURNING_GOAL_L
+                else:
+                    print "Straight, just right"
+                    return self, self.STRAIGHT_GOAL
+            """
             if(irData.left <= self.WALL_FOLLOW_FAR and irData.left >= self.WALL_FOLLOW_CLOSE):
-                self.wall_followed = 0
+                print "Following wall on the left"
+                self.tooFar = False
                 return self, self.STRAIGHT_GOAL
-            if(irData.right<= self.WALL_FOLLOW_FAR and irData.right>= self.WALL_FOLLOW_CLOSE):
+            elif(irData.left > self.WALL_FOLLOW_FAR):
+                print "Too far on the left"
+                if (not self.tooFar):
+                    self.tooFar = True
+                    self.lastTime = worldWrapper.time
+                    return self, self.TURNING_GOAL_L
+                elif (worldWrapper.time - self.lastTime > self.TURN_TIME):
+                    return self, self.STRAIGHT_GOAL
+                else:
+                    return self, self.TURNING_GOAL_L
+            elif(irData.left < self.WALL_FOLLOW_CLOSE):
+                self.tooFar = False
+                print "Too close on the left"
+                return self, self.TURNING_GOAL_R
+
+#            elif(irData.left > self.WALL_FOLLOW_BREAK and irData.right > self.WALL_FOLLOW_BREAK):
+#                print "Breaking away"
+#                return DriveStraightState(worldWrapper), STATE_CHANGE_FLAG
+            return self, self.STRAIGHT_GOAL
+
+            elif(irData.right<= self.WALL_FOLLOW_FAR and irData.right>= self.WALL_FOLLOW_CLOSE):
+                print "Following wall on the right"
                 self.wall_followed = 1
                 return self, self.STRAIGHT_GOAL
-            elif(irData.left > self.WALL_FOLLOW_BREAK and irData.right > self.WALL_FOLLOW_BREAK):
-                return DriveStraightState(worldWrapper), STATE_CHANGE_FLAG
-            elif(irData.left > self.WALL_FOLLOW_FAR and irData.left < self.WALL_FOLLOW_BREAK):
-                return self, self.TURNING_GOAL_L
-            elif(irData.left < self.WALL_FOLLOW_CLOSE):
-                return self, self.TURNING_GOAL_R
             elif(irData.right > self.WALL_FOLLOW_FAR and irData.right < self.WALL_FOLLOW_BREAK):
+                print "Too far on the right"
                 return self, self.TURNING_GOAL_R
             elif(irData.right < self.WALL_FOLLOW_CLOSE):
+                print "Too close on the right"
                 return self, self.TURNING_GOAL_L
+"""
+
 
 # Collect state actually contains a state machine
 class FindBallState(State):

@@ -16,8 +16,9 @@ class InputBlargh(Blargh):
         bumpData.left = self.ardInWrapper.getBumpHit(0)
         bumpData.right= self.ardInWrapper.getBumpHit(1)
         bumpData.power = self.ardInWrapper.getBumpHit(2)
-        irData.left = self.ardInWrapper.getIRDist(0)
-        irData.right = self.ardInWrapper.getIRDist(1)
+        irData.leftFront = self.ardInWrapper.getIRDist(0)
+        irData.leftSide = self.ardInWrapper.getIRDist(1)
+        #print irData.left, irData.right
         return (1, (bumpData, irData))
 
 class BumpSensorData():

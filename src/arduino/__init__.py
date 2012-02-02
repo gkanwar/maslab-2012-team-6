@@ -100,8 +100,8 @@ class ArduinoWrapper():
         self.bumpSensors.append(BumpSensor(self.ard, 4))
         self.bumpSensors.append(BumpSensor(self.ard, 6))
 
-        self.irSensors.append(IRSensor(self.ard, 0))
         self.irSensors.append(IRSensor(self.ard, 1))
+        self.irSensors.append(IRSensor(self.ard, 0))
 
     def start(self):
         self.ard.run()
@@ -152,7 +152,9 @@ class IRSensor(AnalogSensor):
         val = self.getValue()
         if val == None:
             return None
-
+        
+        if (self.port == 1):
+            return -1.89683*10**-7*val**3+0.000283636*val**2-0.148174*val+30.7658
         # Map voltages to distance by a quartic fit
         return 3.36863*10**-9*val**4-4.09778*10**-6*val**3+0.00181883*val**2-0.364703*val+32.3633
 

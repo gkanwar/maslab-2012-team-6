@@ -12,7 +12,7 @@
 
 using namespace std;
 
-#define CAMERA_NUM 1
+#define CAMERA_NUM 0
 #define NUM_FRAMES_TO_AVERAGE 2
 
 #define RED_DISPARITY 100
