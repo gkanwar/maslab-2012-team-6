@@ -40,6 +40,11 @@ class State(object):
             print "BALLS BALLS!"
             return BallAcquisitionState(worldWrapper), STATE_CHANGE_FLAG
         return None,None
+    
+    def checkForYellow(self, worldWrapper):
+        if worldWrapper.time > 150 and worldWrapper.world.yellowTheta != 100:
+            return ScoreState(worldWrapper),STATE_CHANGE_FLAG
+        return None, None
 
 
 
@@ -113,6 +118,10 @@ class BallAcquisitionState(State):
         if changed == STATE_CHANGE_FLAG:
             return newState, changed
 
+        newState,changed = self.checkForYellow(worldWrapper)
+        if changed == STATE_CHANGE_FLAG:
+            return newState, changed
+
         # Check for a timeout
         if time.time() - self.lastTime > self.TIMEOUT:
             return EscapeState(worldWrapper), STATE_CHANGE_FLAG
@@ -151,6 +160,10 @@ class DriveToWallState(State):
         if(changed == STATE_CHANGE_FLAG):
             return newState, changed
 
+        newState,changed = self.checkForYellow(worldWrapper)
+        if changed == STATE_CHANGE_FLAG:
+            return newState, changed
+
 
         self.lastTime = worldWrapper.time
 
@@ -187,6 +200,10 @@ class AlignToWall(State):
         # Check for Balls
         newState,changed = self.checkForBalls(worldWrapper)
         if(changed == STATE_CHANGE_FLAG):
+            return newState, changed
+
+        newState,changed = self.checkForYellow(worldWrapper)
+        if changed == STATE_CHANGE_FLAG:
             return newState, changed
         
         # Backup
@@ -228,6 +245,10 @@ class DriveStraightState(State):
         newState, changed = self.checkGlobal(worldWrapper)
         if changed == STATE_CHANGE_FLAG:
             return newState, changed
+
+        newState,changed = self.checkForYellow(worldWrapper)
+        if changed == STATE_CHANGE_FLAG:
+            return newState, changed
         
         # Check for Balls
         if len(world.balls) > 0:
@@ -266,6 +287,10 @@ class TurnState(State):
         # Check for balls
         newState,changed = self.checkForBalls(worldWrapper)
         if(changed == STATE_CHANGE_FLAG):
+            return newState, changed
+
+        newState,changed = self.checkForYellow(worldWrapper)
+        if changed == STATE_CHANGE_FLAG:
             return newState, changed
 
         # Set the goal location
@@ -311,6 +336,10 @@ class FollowWallState(State):
         # Check for balls 
         newState,changed = self.checkForBalls(worldWrapper)
         if(changed == STATE_CHANGE_FLAG):
+            return newState, changed
+
+        newState,changed = self.checkForYellow(worldWrapper)
+        if changed == STATE_CHANGE_FLAG:
             return newState, changed
         
         if(worldWrapper.world.bumpData != None and
