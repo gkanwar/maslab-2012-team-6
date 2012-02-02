@@ -166,15 +166,18 @@ class DriveToWallState(State):
 class AlignToWall(State):
     BACKUP_TIME = 0.75
     BACKUP_GOAL = (-20, 0)
+    TURN_TIME = 1.5
     TURN_GOAL0 = (0, pi/4)
     TURN_GOAL1 = (0, -pi/4)
     GOOD_DIST = 6
     TIMEOUT = 10
 
-    def __init__(self, worldWrapper, wallFollowed = 0):
+    def __init__(self, worldWrapper, wallFollowed = 0, isFollowing = False):
         self.lastTime = worldWrapper.time
         self.startTime = worldWrapper.time
         self.wallFollowed = wallFollowed
+        self.isFollowing = isFollowing
+
     def step(self, worldWrapper):
         world = worldWrapper.world
         
@@ -199,8 +202,11 @@ class AlignToWall(State):
                 goal = self.TURN_GOAL0
             else:
                 goal = self.TURN_GOAL1
-            if(world.irData != None  and (world.irData.left <= self.GOOD_DIST or world.irData.right <= self.GOOD_DIST)):
+            if(not self.isFollowing and world.irData != None  and (world.irData.left <= self.GOOD_DIST or world.irData.right <= self.GOOD_DIST)):
                 print "In good dist"
+                return FollowWallState(worldWrapper), STATE_CHANGE_FLAG
+            elif(self.isFollowing and worldWrapper.time - self.startTime > self.TURN_TIME and world.irData != None and (world.irData.left <= self.GOOD_DIST or world.irData.right <= self.GOOD_DIST)):
+                print "In good dist and good time!"
                 return FollowWallState(worldWrapper), STATE_CHANGE_FLAG
 
         # Check Timeout
@@ -302,7 +308,7 @@ class FollowWallState(State):
         if(worldWrapper.world.bumpData != None and
            (worldWrapper.world.bumpData.left or
             worldWrapper.world.bumpData.right)):
-            return AlignToWall(worldWrapper, self.wall_followed, True), STATE_CHANGE_FLAG
+            return AlignToWall(worldWrapper, self.wall_followed, isFollowing = True), STATE_CHANGE_FLAG
 
         if not worldWrapper.world.irData == None:
             irData = worldWrapper.world.irData
@@ -357,7 +363,7 @@ class ScoreState(State):
     TURN_TIME = 4
 
     def __init__(self, worldWrapper):
-        self.startTime = time.time()
+        self.startTime = worldWrapper.time
         self.aligning = False
         self.dumping = False
         self.turnGoal = 0
@@ -366,9 +372,9 @@ class ScoreState(State):
         world = worldWrapper.world
 
         # Actions
-        if self.aligning and time.time() - self.startTime < BACKUP_TIME:
+        if self.aligning and worldWrapper.time - self.startTime < BACKUP_TIME:
             goal = (self.BACKUP_GOAL, 0)
-        elif self.aligning and time.time() - self.startTime < TURN_TIME:
+        elif self.aligning and worldWrapper.time - self.startTime < TURN_TIME:
             goal = (self.turnGoal, 0)
         else:
             self.aligning = False
@@ -378,13 +384,13 @@ class ScoreState(State):
         # Fake internal transitions
         if world.bumpData.left and world.bumpData.right:
             # TODO: DUMP AND STUFF
-            self.startTime = time.time()
+            self.startTime = worldWrapper.time
             self.dumping = True
         elif world.bumpData.left:
-            self.startTime = time.time()
+            self.startTime = worldWrapper.time
             self.turnGoal = self.TURN_GOAL
         elif world.bumpData.right:
-            self.startTime = time.time()
+            self.startTime = worldWrapper.time
             self.turnGoal = -self.TURN_GOAL
         
         return self, goal
