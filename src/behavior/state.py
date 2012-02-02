@@ -41,9 +41,12 @@ class State(object):
             return BallAcquisitionState(worldWrapper), STATE_CHANGE_FLAG
         return None,None
     
+    def checkCritical(self, worldWrapper):
+        return worldWrapper.time > 150:
+
     def checkForYellow(self, worldWrapper):
-        if worldWrapper.time > 150 and worldWrapper.world.yellowTheta != 100:
-            return ScoreState(worldWrapper),STATE_CHANGE_FLAG
+        if worldWrapper.world.yellowTheta != 100:
+            return ScoreState(worldWrapper, STATE_CHANGE_FLAG
         return None, None
 
 
@@ -246,9 +249,14 @@ class DriveStraightState(State):
         if changed == STATE_CHANGE_FLAG:
             return newState, changed
 
+        # Check for yellow wall
         newState,changed = self.checkForYellow(worldWrapper)
         if changed == STATE_CHANGE_FLAG:
             return newState, changed
+
+        # Check for critical time
+        if self.checkCritical(worldWrapper):
+            return DriveToWallState(worldWrapper), STATE_CHANGE_FLAG
         
         # Check for Balls
         if len(world.balls) > 0:
@@ -293,6 +301,10 @@ class TurnState(State):
         newState,changed = self.checkForYellow(worldWrapper)
         if changed == STATE_CHANGE_FLAG:
             return newState, changed
+
+        # Check for critical time
+        if self.checkCritical(worldWrapper):
+            return DriveToWallState(worldWrapper), STATE_CHANGE_FLAG
 
         # Set the goal location
         goal = TurnState.GOAL
@@ -522,6 +534,7 @@ class EscapeState(State):
         else:
             return self, goal
 
+# !@#$%^&*()_
 class MusicPlayer(threading.Thread):
     def run(self):
         os.system("mpg123 ../sounds/terrantheme1.mp3")
