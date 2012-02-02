@@ -4,6 +4,8 @@ import time
 
 STATE_CHANGE_FLAG = 0
 DEAD_STATE_FLAG = 1
+START_TURN_FERROUS_FLAG = 2
+STOP_TURN_FERROUS_FLAG = 3
 
 def capVal(val, maximum, minimum):
     if (val > maximum):
@@ -26,8 +28,12 @@ class ControlBlargh(Blargh):
         self.drivePID = PID((.5,0,0), .75)
         self.goal = None
         self.maxMotorSpeed = 1
+        self.shouldTurnFerrous = False
 
     def step(self, goal):
+
+        if self.shouldTurnFerrous:
+            self.arduinoInterface.stepStepper(0, 100)
 
         if not goal == None:
             self.goal = goal
@@ -39,6 +45,10 @@ class ControlBlargh(Blargh):
                 self.arduinoInterface.setMotorSpeed(0, 0)
                 self.arduinoInterface.setMotorSpeed(1, 0) 
                 self.arduinoInterface.setMotorSpeed(2, 0)
+            elif self.goal == START_TURN_FERROUS_FLAG:
+                self.shouldTurnFerrous = True
+            elif self.goal == STOP_TURN_FERROUS_FLAG:
+                self.shouldTurnFerrous = False
             else:
                 self.arduinoInterface.setMotorSpeed(2, self.rollerSpeed)
                 r, theta = self.goal
