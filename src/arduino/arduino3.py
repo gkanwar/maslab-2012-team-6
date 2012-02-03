@@ -311,13 +311,13 @@ if __name__ == "__main__":
     m2 = Motor(a, mc1)
     m3 = Motor(a, mc1)
     an = AnalogSensor(a,1)
-    #stepper = Stepper(a, 11, 12)
+    stepper = Stepper(a, 49, 51, 50)
 
     a.run()
 
     import time
     while True:
-        print an.getValue()
+        print stepper.step(100)
 
 
 ## Setting up a digital sensor on digital port 2
