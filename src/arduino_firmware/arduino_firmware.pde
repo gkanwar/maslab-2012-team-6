@@ -22,17 +22,15 @@ void operator delete(void* ptr) { free(ptr); }
 class Stepper
 {
   public:
-    int dirPin, stepPin, enablePin;
-    Stepper(int dir, int step, int enable)
+    int stepPin, enablePin;
+    Stepper(int step, int enable)
     {
       stepPin = step;
-      dirPin = dir;
       enablePin = enable;
     }
-    void step(boolean dir, int steps)
+    void step(int steps)
     {
       digitalWrite(enablePin, LOW);
-      digitalWrite(dirPin, dir);
       for (int i = 0; i < steps; i++)
       {
         digitalWrite(stepPin, HIGH);
@@ -168,11 +166,10 @@ void stepperInit()
   for (int i = 0; i < numSteppers; i++)
   {
     // Read in the dirPin, stepPin, and enablePin
-    int dirPin = (int) serialRead();
     int stepPin = (int) serialRead();
     int enablePin = (int) serialRead();
     // Create the Stepper object and store it in the array
-    tempStepper = new Stepper(dirPin, stepPin, enablePin);
+    tempStepper = new Stepper(stepPin, enablePin);
     stepper[i] = tempStepper;
   }
 }
@@ -456,8 +453,11 @@ void stepSteppers()
   // Per stepper, read in the steps and step it
   for (int i = 0; i < numSteppers; i++)
   {
-    int steps = (int) serialRead() - 1;
-    stepper[i]->step(true, steps);
+    int step = (int) serialRead() - 1;
+    if (step == 1)
+    {
+      stepper[i]->step(100);
+    }
   }
 }
 

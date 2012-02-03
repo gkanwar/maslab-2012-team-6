@@ -8,7 +8,7 @@ import threading, thread
 # The general idea is to have a thread that constantly sends actuator commands
 # based on arrays and receives sensor data into arrays. The rest of the code
 # can then interface with the arduino by reading to and writing from these
-n# arrays.
+# arrays.
 class Arduino(threading.Thread):
 
     # Arrays for keeping track of input / output
@@ -93,17 +93,15 @@ class Arduino(threading.Thread):
                 output += chr(i+1)
             output += "T" + chr(len(self.stepperSteps) + 1)
             for i in range(len(self.stepperSteps)):
-                dir, steps = self.stepperSteps[i]
-                output += chr(dir+1)
-                output += chr(steps+1)
-                self.stepperSteps[i] = (0, 0)
+                step = self.stepperSteps[i]
+                output += chr(int(step))
             output += "S" + chr(len(self.servoAngles) + 1)
             for i in self.servoAngles:
                 output += chr(i+1)
             output += ";"
             self.port.write(output)
 
-            #print list(output)
+            print list(output)
 
             # Read in the data packet that the arduino sends back
             # Data packet format is identical to the command packet format,
@@ -157,8 +155,7 @@ class Arduino(threading.Thread):
         numSteppers = len(self.stepperPorts)
         output += chr(numSteppers+1)
         for i in range(numSteppers):
-            dirPin, stepPin, enablePin = self.stepperPorts[i]
-            output += chr(dirPin)
+            stepPin, enablePin = self.stepperPorts[i]
             output += chr(stepPin)
             output += chr(enablePin)
         # Servo component of initializing
@@ -189,8 +186,8 @@ class Arduino(threading.Thread):
     # Getting and setting values for sensors and actuators
     def setMotorSpeed(self, motorNum, speed):
         self.motorSpeeds[motorNum] = speed
-    def stepStepper(self, stepperNum, dir, steps):
-        self.stepperSteps[stepperNum] = (dir, steps)
+    def stepStepper(self, stepperNum, step):
+        self.stepperSteps[stepperNum] = step
     def setServoAngle(self, servoNum, angle):
         self.servoAngles[servoNum] = angle
     def getDigitalRead(self, index):
@@ -204,9 +201,9 @@ class Arduino(threading.Thread):
     # below, don't call these yourself!)
     def addMotor(self, mcObj):
         return mcObj.addMotor()
-    def addStepper(self, dirPort, stepPort, enablePort):
-        self.stepperPorts.append((dirPort, stepPort, enablePort))
-        self.stepperSteps.append((0, 0))
+    def addStepper(self, stepPort, enablePort):
+        self.stepperPorts.append((stepPort, enablePort))
+        self.stepperSteps.append(0)
         return len(self.stepperPorts) - 1
     def addDigitalPort(self, port):
         self.digitalPorts.append(port)
@@ -254,16 +251,13 @@ class Motor:
         self.arduino.setMotorSpeed(self.index, val)
 
 class Stepper:
-    def __init__(self, arduino, dirPort, stepPort, enablePort):
+    def __init__(self, arduino, stepPort, enablePort):
         self.arduino = arduino
-        self.dirPort = dirPort
         self.stepPort = stepPort
         self.enablePort = enablePort
-        self.index = self.arduino.addStepper(dirPort, stepPort, enablePort)
-    def step(self, dir, steps):
-        if not dir in [0,1]:
-            dir = 0
-        self.arduino.stepStepper(self.index, dir, steps)
+        self.index = self.arduino.addStepper(stepPort, enablePort)
+    def step(self, step):
+        self.arduino.stepStepper(self.index, step)
 
 # Class to interact with a digital sensor
 class DigitalSensor:
@@ -311,13 +305,12 @@ if __name__ == "__main__":
     m2 = Motor(a, mc1)
     m3 = Motor(a, mc1)
     an = AnalogSensor(a,1)
-    stepper = Stepper(a, 49, 51, 50)
+    stepper = Stepper(a, 51, 50)
 
     a.run()
 
     import time
-    while True:
-        print stepper.step(100)
+    stepper.step(1)
 
 
 ## Setting up a digital sensor on digital port 2
