@@ -101,7 +101,6 @@ class Arduino(threading.Thread):
             output += ";"
             self.port.write(output)
 
-            print list(output)
 
             # Read in the data packet that the arduino sends back
             # Data packet format is identical to the command packet format,
@@ -307,10 +306,18 @@ if __name__ == "__main__":
     an = AnalogSensor(a,1)
     stepper = Stepper(a, 51, 50)
 
+    d1 = DigitalSensor(a, 2)
+    d2 = DigitalSensor(a, 4)
+    d4 = DigitalSensor(a, 6)
+
+
     a.run()
 
     import time
     stepper.step(1)
+
+    while True:
+        print [d1.getValue(), d2.getValue(), d3.getValue(), d4.getValue()]
 
 
 ## Setting up a digital sensor on digital port 2

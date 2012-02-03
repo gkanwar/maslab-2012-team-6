@@ -31,7 +31,7 @@ class State(object):
             return DeadState(world), STATE_CHANGE_FLAG
         # Check for bump, and go into EscapeState if we aren't already
         if  checkBump and (world.isWallInFront() or (not world.bumpData == None 
-            and (world.bumpData.left or world.bumpData.right))):
+            and (world.bumpData.left or world.bumpData.right or world.bumpData.front))):
             return EscapeState(worldWrapper),STATE_CHANGE_FLAG
         return None,None
 
@@ -42,11 +42,11 @@ class State(object):
         return None,None
     
     def checkCritical(self, worldWrapper):
-        return worldWrapper.time > 150:
+        return worldWrapper.time > 150;
 
     def checkForYellow(self, worldWrapper):
         if worldWrapper.world.yellowTheta != 100:
-            return ScoreState(worldWrapper, STATE_CHANGE_FLAG
+            return ScoreState(worldWrapper), STATE_CHANGE_FLAG
         return None, None
 
 
@@ -121,9 +121,6 @@ class BallAcquisitionState(State):
         if changed == STATE_CHANGE_FLAG:
             return newState, changed
 
-        newState,changed = self.checkForYellow(worldWrapper)
-        if changed == STATE_CHANGE_FLAG:
-            return newState, changed
 
         # Check for a timeout
         if time.time() - self.lastTime > self.TIMEOUT:
@@ -163,10 +160,6 @@ class DriveToWallState(State):
         if(changed == STATE_CHANGE_FLAG):
             return newState, changed
 
-        newState,changed = self.checkForYellow(worldWrapper)
-        if changed == STATE_CHANGE_FLAG:
-            return newState, changed
-
 
         self.lastTime = worldWrapper.time
 
@@ -174,7 +167,7 @@ class DriveToWallState(State):
             return EscapeState(worldWrapper), STATE_CHANGE_FLAG
         if(random.random() < timeEqualizedRandom(self.lastTime, worldWrapper.time, 0.20)):
             return TurnState(worldWrapper), STATE_CHANGE_FLAG
-        if(world.bumpData != None and (world.bumpData.left  or world.bumpData.right)):
+        if(world.bumpData != None and (world.bumpData.left  or world.bumpData.right or world.bumpData.left)):
             return AlignToWall(worldWrapper), STATE_CHANGE_FLAG
         if(world.irData != None and world.irData.left < self.GOOD_DIST):
             return FollowWallState(worldWrapper), STATE_CHANGE_FLAG
@@ -205,9 +198,6 @@ class AlignToWall(State):
         if(changed == STATE_CHANGE_FLAG):
             return newState, changed
 
-        newState,changed = self.checkForYellow(worldWrapper)
-        if changed == STATE_CHANGE_FLAG:
-            return newState, changed
         
         # Backup
         if(worldWrapper.time - self.startTime < self.BACKUP_TIME):
@@ -250,9 +240,6 @@ class DriveStraightState(State):
             return newState, changed
 
         # Check for yellow wall
-        newState,changed = self.checkForYellow(worldWrapper)
-        if changed == STATE_CHANGE_FLAG:
-            return newState, changed
 
         # Check for critical time
         if self.checkCritical(worldWrapper):
@@ -270,7 +257,7 @@ class DriveStraightState(State):
         # TODO: Check this and tweak it for optimal performance
         if random.random() < timeEqualizedRandom(self.lastTime, worldWrapper.time, 0.20):
             return TurnState(worldWrapper), STATE_CHANGE_FLAG
-        if random.random() < timeEqualizedRandom(self.lastTime, worldWrapper.time, 0.99):
+        if random.random() < timeEqualizedRandom(self.lastTime, worldWrapper.time, 0.50):
             return DriveToWallState(worldWrapper), STATE_CHANGE_FLAG
 
         # Otherwise, full steam ahead.
@@ -298,9 +285,7 @@ class TurnState(State):
             return newState, changed
 
         # Check for yellow wall, and change states if the time is greater than 150
-        newState,changed = self.checkForYellow(worldWrapper)
-        if changed == STATE_CHANGE_FLAG:
-            return newState, changed
+
 
         # Check for critical time
         if self.checkCritical(worldWrapper):
@@ -351,13 +336,12 @@ class FollowWallState(State):
         if(changed == STATE_CHANGE_FLAG):
             return newState, changed
 
-        newState,changed = self.checkForYellow(worldWrapper)
-        if changed == STATE_CHANGE_FLAG:
-            return newState, changed
+
         
         if(worldWrapper.world.bumpData != None and
            (worldWrapper.world.bumpData.left or
-            worldWrapper.world.bumpData.right)):
+            worldWrapper.world.bumpData.right or
+            worldWrapper.world.bumpData.front)):
             return AlignToWall(worldWrapper), STATE_CHANGE_FLAG
 
         if not worldWrapper.world.irData == None:
@@ -378,7 +362,12 @@ class FollowWallState(State):
             else:
                 print "We're turned straight"
                 turned = self.TURNED_STRAIGHT
+                
+            if random.random() < timeEqualizedRandom(self.lastTime, worldWrapper.time, 0.1):
+                return DriveToWallState(worldWrapper), STATE_CHANGE_FLAG
 
+
+            
             #BLOCK OF LOGIC
             if(turned == self.TURNED_RIGHT):
                 if(irData.leftSide <= self.WALL_FOLLOW_CLOSE):
@@ -453,7 +442,7 @@ class FindBallState(State):
 
         # Do the global checks
         # newState, changed = self.checkGlobal(worldWrapper)
-        # if changed == STATE_CHANGE_FLAG:
+        # if changepd == STATE_CHANGE_FLAG:
             # return newState, changed
 
         # If we see any balls
@@ -490,8 +479,8 @@ class ScoreState(State):
             goal = (self.FORWARD_GOAL, yellowTheta)    
 
         # Fake internal transitions
-        if world.bumpData.left and world.bumpData.right:
-            goal = (0,TURN_FERROUS_FLAG);
+        if world.bumpData.front:
+            goal = (0, START_TURN_FERROUS_FLAG);
             self.startTime = worldWrapper.time
             self.dumping = True
         elif world.bumpData.left:
@@ -525,7 +514,7 @@ class EscapeState(State):
         if (worldWrapper.time - self.startTime < self.BACKUP_TIME):
             goal = EscapeState.BACKUP_GOAL
         else:
-            goalp = EscapeState.TURN_GOAL
+            goal = EscapeState.TURN_GOAL
 
         # If we've hit the timeout, switch to driving straight.
         if (worldWrapper.time - self.startTime > self.BACKUP_TIME + self.TURN_TIME):
@@ -548,7 +537,7 @@ class DeadState(State):
     def step(self, worldWrapper):
         world = worldWrapper.world
         # If the power button has been hit
-        if world.bumpData != None and world.bumpData.power == True:
+        if world.bumpData != None and world.bumpData.left == True and world.bumpData.right == True:
             # Go into wandering
             worldWrapper.resetTime()
             MusicPlayer().start()

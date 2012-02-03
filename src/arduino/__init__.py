@@ -96,8 +96,8 @@ class ArduinoWrapper():
         self.motors.append(Motor(self.ard, self.mcs[1]))
         self.motors.append(Motor(self.ard, self.mcs[1]))
 
-        self.bumpSensors.append(BumpSensor(self.ard, 2))
         self.bumpSensors.append(BumpSensor(self.ard, 4))
+        self.bumpSensors.append(BumpSensor(self.ard, 2))
         self.bumpSensors.append(BumpSensor(self.ard, 6))
 
         self.irSensors.append(IRSensor(self.ard, 1))
@@ -162,4 +162,6 @@ class IRSensor(AnalogSensor):
 class BumpSensor(DigitalSensor):
     # Test for hit
     def hit(self):
+        if self.port == 6:
+            return not self.getValue()
         return self.getValue()
