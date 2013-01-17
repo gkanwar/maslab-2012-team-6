@@ -3,6 +3,7 @@ import math
 from math import pi, sin, cos, sqrt, atan, atan2
 import time
 import random
+import visual
 
 from vector import *
 
@@ -18,8 +19,37 @@ CAMERA_MAX_SIGHTING_ANGLE = pi / 6
 CAMERA_MIN_SIGHTING_DISTANCE = 10
 CAMERA_MAX_SIGHTING_DISTANCE = 50
 
+BALL_RADIUS = 1.25
+
+
 BUMP_SENSOR_THRESHOLD = 0.5
 
+
+# Class to manage colors
+class Color:
+    RED = 0
+    GREEN = 1
+    WHITE = 2
+    YELLOW = 3
+    colorRGBDict = {
+        RED: (255, 0, 0),
+        GREEN: (0, 255, 0),
+        WHITE: (255, 255, 255),
+        YELLOW: (255, 255, 0)
+    }
+    colorVisualDict = {
+        RED: visual.color.red,
+        GREEN: visual.color.green,
+        WHITE: visual.color.white,
+        YELLOW: visual.color.yellow
+    }
+    
+    @staticmethod
+    def constToVisual(const):
+        return Color.colorVisualDict[const]
+    @staticmethod
+    def constToRGB(const):
+        return Color.colorRGBDict[const]
 
 # Converts a vector (x,y) to (r, theta)
 def toPolar( v ):
@@ -51,7 +81,8 @@ class Simulator:
          #                   random.randint(0, int( self.size.y ) ) ),
           #                  self.robot)
            #           for i in range(12)]
-        self.balls = []
+        self.balls = [Ball(Vector(100, 100), self.robot, Color.RED),
+                      Ball(Vector(100, 150), self.robot, Color.GREEN)]
         self.objects = []
         self.objects.extend(self.balls)
         self.objects.extend(self.walls)
@@ -60,6 +91,9 @@ class Simulator:
         pygame.init()
         self.screen = pygame.display.set_mode( ( int( PIXELS_PER_INCH * self.size.x ),
                                                int( PIXELS_PER_INCH * self.size.y ) ) )
+        # Initialize visual for visualization
+        visual.scene.autocenter = True
+        visual.scene.autoscale = True
 
     def draw(self):
         # Clear the screen
@@ -310,29 +344,34 @@ def makeWalls( points, yellowWalls ):
     walls = []
     for i in range( len(points) - 1 ):
         if i in yellowWalls:
-            color = Wall.COLOR_YELLOW
+            color = Color.YELLOW
         else:
-            color = Wall.COLOR_WHITE
+            color = Color.WHITE
         walls.append( Wall( points[i], points[i+1], color ) )
     return walls
 
 class Wall(Object):
-    
-    COLOR_WHITE = 0
-    COLOR_YELLOW = 1
 
+    HEIGHT = 6
+    WIDTH = 0.5
+    
     def __init__(self, start, end, color):
         self.start = start
         self.end = end
         self.color = color
+        lenv = self.end-self.start
+        middle = self.start + scale(0.5, lenv)
+        self.visual = visual.box(pos=(middle.x, middle.y, Wall.HEIGHT/2),
+                                 length=length(lenv),
+                                 height=Wall.WIDTH,
+                                 width=Wall.HEIGHT,
+                                 axis=(lenv.x, lenv.y, 0),
+                                 color=Color.constToVisual(color))
     def step(self):
         pass
     def draw( self, screen ):
-        if self.color == self.COLOR_WHITE:
-            fuckingColor = (255, 255, 255)
-        else:
-            fuckingColor = (255, 255, 0)
-        pygame.draw.line(screen, fuckingColor,
+        color = Color.constToRGB(self.color)
+        pygame.draw.line(screen, color,
                               (int(PIXELS_PER_INCH * self.start.x),
                                int(PIXELS_PER_INCH * self.start.y)),
                               (int(PIXELS_PER_INCH * self.end.x),
@@ -368,28 +407,44 @@ def localize( wall, obj ):
     return(r, theta, thetaEnd, thetaStart)
     
 class Ball(Object):
-    def __init__(self, position, robot):
+    def __init__(self, position, robot, color):
         # Initialize the location of the ball
         self.position = position
+        self.velocity = Vector(0, 0)
         self.robot = robot
+        self.color = color
+        self.lastUpdate = time.time()
+        self.visual = visual.sphere(pos=(self.position.x, self.position.y, 0), radius=BALL_RADIUS, color=Color.constToVisual(color))
         # Designates if the ball has been spotted by the camera this step
         # so coloring can change.
         self.isSighted = False
-        self.isAquired = False
+        self.isAcquired = False
 
     def step(self):
+        # Get the timestep
+        deltaT = time.time() - self.lastUpdate
+        self.lastUpdate = time.time()
+
         # See if the robot is close enough to pick the ball up.
         r, theta = toPolar( self.position - self.robot.position )
         if r < BALL_PICKUP_DISTANCE:
             self.isAquired = True
+            self.visual.visible = False
+            return
+        # Otherwise, update the position based on velocity
+        self.position += scale(deltaT, self.velocity)
+        self.visual.pos = (self.position.x, self.position.y, 0)
 
     # Draw the ball to the screen
     def draw(self, screen):
-        color = ( 255, 0, 0 )
+        if self.isAcquired:
+            return
+
+        # Select color based on self.color and sighted or not
         if self.isSighted:
-            color = ( 255, 255, 0 )
-        if self.isAquired:
-            color = ( 0, 127, 255 )
+            color = Color.constToRGB(Color.YELLOW)
+        else:
+            color = Color.constToRGB(self.color)
         pygame.draw.circle(screen, color,
                              (int(PIXELS_PER_INCH * self.position.x),
                               int(PIXELS_PER_INCH * self.position.y)),

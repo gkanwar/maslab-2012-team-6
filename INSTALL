@@ -6,3 +6,4 @@ PyUSB		Under lib, no need to install
 PyGame		sudo apt-get install python-pygame
 OpenCV		sudo apt-get install libcv-dev
 HighGUI		sudo apt-get install libhighgui-dev
+VPython		sudo apt-get install python-visual
